@@ -48,19 +48,46 @@ function useLS(key, init) {
   return [v, save];
 }
 
+function getApiKey() {
+  try { return JSON.parse(localStorage.getItem("autovion_apikey") || '""'); } catch { return ""; }
+}
+
 async function callClaude(prompt, maxTokens = 3000) {
-  const r = await fetch(`${BACKEND}/api/claude`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, maxTokens }),
-  });
-  if (!r.ok) {
-    const e = await r.json().catch(() => ({}));
-    throw new Error(e.error || `Erro ${r.status}`);
+  const apiKey = getApiKey();
+
+  // tenta backend primeiro; se falhar, cai no direto
+  if (BACKEND) {
+    try {
+      const r = await fetch(`${BACKEND}/api/claude`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, maxTokens }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (!d.error) return d.content?.map(i => i.text || "").join("") || "";
+      }
+    } catch (_) {}
   }
-  const d = await r.json();
-  if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
-  return d.content?.map(i => i.text || "").join("") || "";
+
+  // fallback: chamada direta com API key do usuário
+  if (!apiKey) throw new Error("Configure sua API Key da Anthropic nas Configurações.");
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:maxTokens, messages:[{ role:"user", content:prompt }] }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e?.error?.message || `Erro ${res.status}`);
+  }
+  const data = await res.json();
+  return data.content?.map(i => i.text || "").join("") || "";
 }
 
 const ESTILOS = [
@@ -602,7 +629,8 @@ Responda como ARIA: útil, criativo, conciso. Máximo 150 palavras.`;
 
 // ── CONFIGURAÇÕES ─────────────────────────────────────────────
 function Config({ user, onSair }) {
-  const [salvo, setSalvo] = useState(false);
+  const [apiKey, setApiKey] = useLS("autovion_apikey", "");
+  const [salvo, setSalvo]   = useState(false);
 
   function salvar() { setSalvo(true); setTimeout(()=>setSalvo(false), 2000); }
 
@@ -623,10 +651,17 @@ function Config({ user, onSair }) {
       </Card>
 
       <Card style={{ padding:18, marginBottom:14 }}>
-        <div style={{ fontWeight:700, fontSize:14, marginBottom:12 }}>ℹ️ Sobre a plataforma</div>
-        <div style={{ fontSize:13, color:"#475569", lineHeight:1.7 }}>
-          O Autovion utiliza IA para gerar roteiros, imagens e narração automaticamente.<br/>
-          Nenhuma configuração adicional é necessária — tudo funciona com sua conta.
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+          <div>
+            <div style={{ fontWeight:700, fontSize:14 }}>🤖 API Key — Anthropic</div>
+            <div style={{ fontSize:11, color:"#475569", marginTop:2 }}>Necessária para gerar vídeos e usar a ARIA</div>
+          </div>
+          <a href="https://console.anthropic.com" target="_blank" style={{ fontSize:11, color:"#a78bfa", textDecoration:"none", fontWeight:600 }}>Obter →</a>
+        </div>
+        <input type="password" value={apiKey} onChange={e=>setApiKey(e.target.value)} placeholder="sk-ant-..." style={{ fontFamily:"monospace", fontSize:12 }}/>
+        <div style={{ marginTop:8, display:"flex", alignItems:"center", gap:6 }}>
+          <div style={{ width:7, height:7, borderRadius:"50%", background:(apiKey?.length||0)>10?"#10b981":"#ef4444" }}/>
+          <span style={{ fontSize:11, color:"#475569" }}>{(apiKey?.length||0)>10?"API Key configurada ✓":"Não configurada — cole sua chave acima"}</span>
         </div>
       </Card>
 
