@@ -1,183 +1,810 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Autovion — AI Video Engine</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#04050a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
-input,textarea{background:#0d1020;border:1.5px solid #1a1f38;color:#f1f5f9;font-family:inherit;font-size:14px;outline:none;border-radius:10px;width:100%;padding:11px 14px}
-input:focus,textarea:focus{border-color:#7c3aed}
-input::placeholder,textarea::placeholder{color:#475569}
-button{cursor:pointer;font-family:inherit;border:none;transition:all .2s}
-button:disabled{opacity:.4;cursor:not-allowed}
-.card{background:#080c1a;border:1.5px solid #131830;border-radius:14px;padding:18px;margin-bottom:12px}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
-#app{display:flex;min-height:100vh}
-#sidebar{width:200px;background:#06080f;border-right:1px solid #0d1020;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
-#main{flex:1;overflow:auto;display:flex;flex-direction:column;min-width:0}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;cursor:pointer;margin-bottom:3px;font-size:14px;font-weight:500;color:#475569;border:1px solid transparent}
-.nav-item.active{color:#a78bfa;background:rgba(124,58,237,.14);border-color:rgba(124,58,237,.28)}
-.estilo-item{padding:11px 12px;border-radius:11px;cursor:pointer;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:9px;margin-bottom:8px}
-.estilo-item.sel{background:rgba(124,58,237,.12);border-color:rgba(124,58,237,.5)}
-.voz-item{padding:8px 10px;border-radius:9px;cursor:pointer;margin-bottom:5px;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:8px}
-.voz-item.sel{background:rgba(79,70,229,.14);border-color:rgba(99,102,241,.5)}
-.fmt-item{padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:8px;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:10px}
-.fmt-item.sel{background:rgba(6,182,212,.09);border-color:rgba(6,182,212,.4)}
-.video-card{background:#080c1a;border:1.5px solid #131830;border-radius:14px;overflow:hidden}
-.pip-step{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:11px;background:transparent;border:1px solid #131830;margin-bottom:6px}
-.pip-step.done{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2)}
-.pip-step.active{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.4)}
-.chat-msg{max-width:82%;padding:11px 15px;font-size:14px;line-height:1.6;margin-bottom:4px}
-.chat-u{background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:16px 16px 4px 16px;align-self:flex-end}
-.chat-a{background:#0d1020;border:1.5px solid #131830;color:#cbd5e1;border-radius:16px 16px 16px 4px;align-self:flex-start}
-</style>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Autovion — AI Video Engine</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:#04050a;color:#f1f5f9;font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased}
+    ::-webkit-scrollbar{width:3px}
+    ::-webkit-scrollbar-thumb{background:#1e2240;border-radius:99px}
+    input,textarea{background:#0d1020;border:1.5px solid #1a1f38;color:#f1f5f9;font-family:'Outfit',sans-serif;font-size:14px;outline:none;border-radius:10px;width:100%;padding:11px 14px;transition:border-color .2s,box-shadow .2s}
+    input:focus,textarea:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+    input::placeholder,textarea::placeholder{color:#334155}
+    button{cursor:pointer;font-family:'Outfit',sans-serif;border:none;outline:none;transition:all .2s}
+    button:disabled{opacity:.35;cursor:not-allowed!important}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    @keyframes glow{0%,100%{box-shadow:0 0 20px rgba(124,58,237,.3)}50%{box-shadow:0 0 50px rgba(124,58,237,.65)}}
+    .fu{animation:fadeUp .4s ease both}
+    .fi{animation:fadeIn .3s ease both}
+  </style>
 </head>
 <body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
 
-<!-- AUTH -->
-<div id="auth" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#04050a">
-  <div style="width:100%;max-width:400px">
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="display:inline-flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;animation:float 4s ease-in-out infinite">▶</div>
-        <div style="font-weight:900;font-size:20px">Auto<span style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">vion</span></div>
-      </div>
-      <div style="margin-top:10px;color:#475569;font-size:14px">Crie vídeos virais com inteligência artificial</div>
-    </div>
-    <div style="background:#080c1a;border:1.5px solid #131830;border-radius:18px;padding:28px">
-      <div style="display:flex;background:#0d1020;border-radius:10px;padding:4px;margin-bottom:22px;gap:4px">
-        <button id="tab-login" onclick="setTab('login')" style="flex:1;padding:9px;border-radius:8px;background:#131830;color:#f1f5f9;font-size:14px;font-weight:600">Entrar</button>
-        <button id="tab-reg" onclick="setTab('register')" style="flex:1;padding:9px;border-radius:8px;background:transparent;color:#475569;font-size:14px;font-weight:600">Criar conta</button>
-      </div>
-      <div id="nome-field" style="display:none;margin-bottom:12px"><input id="auth-nome" placeholder="Seu nome completo"/></div>
-      <div style="margin-bottom:12px"><input type="email" id="auth-email" placeholder="voce@email.com"/></div>
-      <div style="margin-bottom:12px"><input type="password" id="auth-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-      <div id="auth-msg" style="display:none;border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:12px"></div>
-      <button id="auth-btn" onclick="doLogin()" style="background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:12px;padding:13px;font-size:15px;font-weight:700;width:100%;display:flex;align-items:center;justify-content:center;gap:8px">Entrar na plataforma</button>
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #131830;text-align:center;font-size:12px;color:#334155">Mais de <span style="color:#8b5cf6;font-weight:700">12.400 criadores</span> já usam o Autovion</div>
-    </div>
-  </div>
-</div>
+const BACKEND = "https://autovion2.onrender.com";
 
-<!-- PIPELINE -->
-<div id="pip-modal" style="position:fixed;inset:0;background:rgba(4,5,10,.96);backdrop-filter:blur(20px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#080c1a;border:1.5px solid rgba(124,58,237,.45);border-radius:22px;width:100%;max-width:460px;padding:28px">
-    <div style="text-align:center;margin-bottom:22px">
-      <div id="pip-icon" style="width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#4338ca);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 14px">⚙️</div>
-      <div id="pip-title" style="font-weight:900;font-size:20px;margin-bottom:4px">Gerando seu vídeo...</div>
-      <div id="pip-sub" style="color:#475569;font-size:13px">Etapa 1 de 6</div>
-    </div>
-    <div style="margin-bottom:18px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px"><span style="color:#475569">Progresso</span><span id="pip-pct" style="color:#8b5cf6;font-weight:700">0%</span></div>
-      <div style="height:5px;background:#131830;border-radius:5px;overflow:hidden"><div id="pip-bar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee);border-radius:5px;width:0%;transition:width .6s ease"></div></div>
-    </div>
-    <div id="pip-steps"></div>
-    <button id="pip-ok" onclick="closePip()" style="display:none;width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:12px;font-size:15px;font-weight:700;margin-top:10px">🎬 Ver Vídeo →</button>
-    <button id="pip-err" onclick="closePip()" style="display:none;width:100%;padding:13px;background:#0d1020;border:1.5px solid #131830;color:#f1f5f9;border-radius:12px;font-size:15px;font-weight:600;margin-top:10px">← Tentar novamente</button>
-  </div>
-</div>
+const uid    = () => Math.random().toString(36).slice(2, 9);
+const sleep  = ms => new Promise(r => setTimeout(r, ms));
+const fmtDur = s  => `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
 
-<!-- APP -->
-<div id="app" style="display:none">
-  <div id="sidebar">
-    <div style="padding:15px;border-bottom:1px solid #0d1020;display:flex;align-items:center;gap:10px">
-      <div style="width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">▶</div>
-      <div style="font-weight:900;font-size:17px">Auto<span style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">vion</span></div>
-    </div>
-    <nav style="padding:10px 7px;flex:1">
-      <div class="nav-item active" id="nav-dash" onclick="go('dash')">▣ Dashboard</div>
-      <div class="nav-item" id="nav-criar" onclick="go('criar')">⚡ Criar Vídeo</div>
-      <div class="nav-item" id="nav-aria" onclick="go('aria')">🤖 ARIA <span style="background:rgba(34,211,238,.18);color:#22d3ee;border-radius:99px;font-size:9px;padding:1px 6px;font-weight:800;margin-left:4px">AI</span></div>
-    </nav>
-    <div style="padding:10px;border-top:1px solid #0d1020">
-      <div style="background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.22);border-radius:11px;padding:10px 12px;margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span id="plan-lbl" style="font-size:11px;color:#8b5cf6;font-weight:700">FREE</span>
-          <button onclick="go('planos')" style="background:#7c3aed;border-radius:6px;padding:2px 8px;font-size:10px;color:white;font-weight:700">⬆</button>
+function useLS(key, init) {
+  const [v, set] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(key)) ?? init; }
+    catch { return init; }
+  });
+  const save = useCallback(x => { set(x); try { localStorage.setItem(key, JSON.stringify(x)); } catch {} }, [key]);
+  return [v, save];
+}
+
+async function callClaude(prompt, maxTokens = 3000) {
+  const r = await fetch(`${BACKEND}/api/claude`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, maxTokens }),
+  });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error || `Erro ${r.status}`);
+  }
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+  return d.content?.map(i => i.text || "").join("") || "";
+}
+
+const ESTILOS = [
+  { id:"viral",        e:"⚡", l:"Viral / Hype",      d:"Gancho agressivo, ritmo acelerado" },
+  { id:"dark",         e:"🌑", l:"Dark & Misterioso", d:"Atmosférico, sombrio, intrigante" },
+  { id:"motivacional", e:"🔥", l:"Motivacional",       d:"Alta energia, frases de impacto" },
+  { id:"curiosidades", e:"🧠", l:"Curiosidades",       d:"Fatos surpreendentes e didáticos" },
+  { id:"relaxante",    e:"🌊", l:"Relaxante",          d:"Tom calmo e contemplativo" },
+];
+
+const VOZES = [
+  { id:"echo",    l:"Echo",    d:"Masculino, grave",     i:"🎙️" },
+  { id:"onyx",    l:"Onyx",    d:"Profundo, dramático",  i:"🔊" },
+  { id:"nova",    l:"Nova",    d:"Feminino, expressivo", i:"✨" },
+  { id:"shimmer", l:"Shimmer", d:"Suave, narrativo",     i:"🌟" },
+];
+
+const PIPELINE = [
+  { id:"script", i:"📝", l:"Gerando Roteiro com IA",   ms:0    },
+  { id:"voice",  i:"🎙️", l:"Sintetizando Narração",    ms:2000 },
+  { id:"images", i:"🖼️", l:"Gerando Imagens",           ms:2500 },
+  { id:"edit",   i:"✂️", l:"Editando Transições",      ms:1500 },
+  { id:"render", i:"⚙️", l:"Renderizando Vídeo Final", ms:2000 },
+  { id:"export", i:"📦", l:"Exportando MP4",            ms:1000 },
+];
+
+const PLANOS = [
+  { id:"free",   n:"Free",   p:0,   c:"#64748b", f:["3 vídeos/mês","Roteiro IA","720p"] },
+  { id:"pro",    n:"Pro",    p:47,  c:"#8b5cf6", f:["30 vídeos/mês","1080p","ARIA IA","Todas as vozes"], star:true },
+  { id:"agency", n:"Agency", p:197, c:"#f59e0b", f:["Ilimitado","4K","API access","Suporte"] },
+];
+
+const Spin = ({ s=16, c="#a78bfa" }) => (
+  <span style={{ display:"inline-block", width:s, height:s, border:`2px solid ${c}22`, borderTopColor:c, borderRadius:"50%", animation:"spin .65s linear infinite", flexShrink:0 }}/>
+);
+
+function Logo({ sm }) {
+  const fs = sm ? 16 : 20, ls = sm ? 28 : 36;
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+      <div style={{ width:ls, height:ls, background:"linear-gradient(135deg,#7c3aed,#4338ca)", borderRadius:ls*.27, display:"flex", alignItems:"center", justifyContent:"center", fontSize:ls*.47, boxShadow:"0 4px 18px rgba(124,58,237,.55)", animation:"float 4s ease-in-out infinite", flexShrink:0 }}>▶</div>
+      <div>
+        <div style={{ fontWeight:900, fontSize:fs, letterSpacing:"-.03em", lineHeight:1 }}>
+          Auto<span style={{ background:"linear-gradient(135deg,#a78bfa,#22d3ee)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>vion</span>
         </div>
-        <div style="height:3px;background:#0d1020;border-radius:3px;overflow:hidden"><div id="cred-bar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee);width:0%"></div></div>
-        <div id="cred-lbl" style="font-size:10px;color:#334155;margin-top:4px">3/3 créditos</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div id="u-av" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#4338ca);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">G</div>
-        <div style="flex:1;min-width:0">
-          <div id="u-name" style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-          <div id="u-email" style="font-size:10px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-        </div>
-        <button onclick="logout()" style="background:none;color:#475569;font-size:12px">↩</button>
+        {!sm && <div style={{ fontSize:9, color:"#475569", letterSpacing:".12em", fontWeight:700, marginTop:1 }}>AI VIDEO ENGINE</div>}
       </div>
     </div>
-  </div>
+  );
+}
 
-  <div id="main">
-    <div style="position:sticky;top:0;background:rgba(6,8,15,.92);backdrop-filter:blur(14px);border-bottom:1px solid #0d1020;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;z-index:50">
-      <div id="pg-title" style="font-weight:600;font-size:14px;color:#475569">Dashboard</div>
-      <div style="display:flex;gap:9px">
-        <button onclick="go('criar')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:9px;padding:7px 15px;font-size:13px">+ Novo Vídeo</button>
-        <button onclick="go('planos')" style="background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:9px;padding:7px 15px;font-size:13px;font-weight:700">⚡ Pro</button>
-      </div>
-    </div>
-    <div style="padding:22px">
+const Pill = ({ children, c="#8b5cf6" }) => (
+  <span style={{ background:c+"1a", color:c, border:`1px solid ${c}33`, borderRadius:99, padding:"2px 10px", fontSize:11, fontWeight:700, display:"inline-block" }}>{children}</span>
+);
 
-      <!-- DASH -->
-      <div id="pg-dash">
-        <div style="margin-bottom:24px"><div style="font-weight:900;font-size:22px">Olá, <span id="dash-nm" style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></span> 👋</div><div style="color:#475569;font-size:13px;margin-top:3px">Seu estúdio de conteúdo com IA</div></div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
-          <div style="background:#080c1a;border:1.5px solid #131830;border-radius:12px;padding:16px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#8b5cf699,transparent)"></div><div style="font-size:20px;margin-bottom:8px">🎬</div><div id="s-total" style="font-weight:900;font-size:24px;color:#8b5cf6">0</div><div style="font-size:11px;color:#334155;margin-top:2px">Vídeos</div></div>
-          <div style="background:#080c1a;border:1.5px solid #131830;border-radius:12px;padding:16px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#10b98199,transparent)"></div><div style="font-size:20px;margin-bottom:8px">✅</div><div id="s-pron" style="font-weight:900;font-size:24px;color:#10b981">0</div><div style="font-size:11px;color:#334155;margin-top:2px">Prontos</div></div>
-          <div style="background:#080c1a;border:1.5px solid #131830;border-radius:12px;padding:16px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#22d3ee99,transparent)"></div><div style="font-size:20px;margin-bottom:8px">⏱️</div><div id="s-dur" style="font-weight:900;font-size:24px;color:#22d3ee">0:00</div><div style="font-size:11px;color:#334155;margin-top:2px">Duração</div></div>
+const Card = ({ children, style={}, ...p }) => (
+  <div style={{ background:"#080c1a", border:"1.5px solid #131830", borderRadius:14, ...style }} {...p}>{children}</div>
+);
+
+// ── AUTH ──────────────────────────────────────────────────────
+function Auth({ onLogin }) {
+  const [tab, setTab]   = useState("login");
+  const [nm, setNm]     = useState("");
+  const [em, setEm]     = useState("");
+  const [pw, setPw]     = useState("");
+  const [load, setLoad] = useState(false);
+  const [msg, setMsg]   = useState(null);
+
+  async function go() {
+    setMsg(null);
+    if (!em) return setMsg({ e:true, t:"Digite seu e-mail." });
+    if (tab !== "forgot" && !pw) return setMsg({ e:true, t:"Digite sua senha." });
+    if (tab === "register" && !nm) return setMsg({ e:true, t:"Digite seu nome." });
+    setLoad(true); await sleep(800); setLoad(false);
+    if (tab === "forgot") return setMsg({ e:false, t:"✅ Link enviado! Verifique seu e-mail." });
+    onLogin({ id:uid(), nome:nm||em.split("@")[0], email:em, plano:"free", creditos:3 });
+  }
+
+  return (
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:20, background:"#04050a", position:"relative", overflow:"hidden" }}>
+      <div style={{ position:"absolute", top:"-15%", left:"-10%", width:"55vw", height:"55vw", background:"radial-gradient(circle,rgba(124,58,237,.07),transparent 70%)", borderRadius:"50%", pointerEvents:"none" }}/>
+      <div style={{ width:"100%", maxWidth:400 }} className="fu">
+        <div style={{ textAlign:"center", marginBottom:28 }}>
+          <div style={{ display:"inline-flex" }}><Logo/></div>
+          <div style={{ marginTop:10, color:"#475569", fontSize:14 }}>Crie vídeos virais com inteligência artificial</div>
         </div>
-        <div id="vgrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
-      </div>
-
-      <!-- CRIAR -->
-      <div id="pg-criar" style="display:none;max-width:640px;margin:0 auto">
-        <div style="margin-bottom:24px"><div style="font-weight:900;font-size:24px;margin-bottom:4px">Criar Vídeo <span style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">com IA</span></div><div style="color:#475569;font-size:14px">Do tema ao vídeo em 1 clique. Pipeline 100% automatizado.</div></div>
-        <div class="card"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:8px">TEMA DO VÍDEO *</span><input id="tema" placeholder="Ex: A verdade sombria sobre dormir menos de 6 horas..." onkeydown="if(event.key==='Enter')gerar()"/><div id="tema-err" style="color:#ef4444;font-size:12px;margin-top:6px;display:none"></div><div style="font-size:11px;color:#334155;margin-top:5px">💡 Temas específicos e provocativos geram mais retenção</div></div>
-        <div class="card"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:12px">ESTILO NARRATIVO</span>
-          <div class="estilo-item sel" onclick="selE(this,'viral')"><span style="font-size:17px">⚡</span><div><div style="font-size:12px;font-weight:700;color:#a78bfa">Viral / Hype</div><div style="font-size:10px;color:#334155">Gancho agressivo</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'dark')"><span style="font-size:17px">🌑</span><div><div style="font-size:12px;font-weight:700">Dark & Misterioso</div><div style="font-size:10px;color:#334155">Sombrio, intrigante</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'motivacional')"><span style="font-size:17px">🔥</span><div><div style="font-size:12px;font-weight:700">Motivacional</div><div style="font-size:10px;color:#334155">Alta energia</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'curiosidades')"><span style="font-size:17px">🧠</span><div><div style="font-size:12px;font-weight:700">Curiosidades</div><div style="font-size:10px;color:#334155">Fatos surpreendentes</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'relaxante')"><span style="font-size:17px">🌊</span><div><div style="font-size:12px;font-weight:700">Relaxante</div><div style="font-size:10px;color:#334155">Tom calmo</div></div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-          <div class="card" style="margin-bottom:0"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:10px">VOZ</span>
-            <div class="voz-item sel" onclick="selV(this,'echo')">🎙️ <div><div style="font-size:12px;font-weight:600;color:#818cf8">Echo</div><div style="font-size:10px;color:#334155">Masculino</div></div></div>
-            <div class="voz-item" onclick="selV(this,'onyx')">🔊 <div><div style="font-size:12px;font-weight:600">Onyx</div><div style="font-size:10px;color:#334155">Dramático</div></div></div>
-            <div class="voz-item" onclick="selV(this,'nova')">✨ <div><div style="font-size:12px;font-weight:600">Nova</div><div style="font-size:10px;color:#334155">Feminino</div></div></div>
-            <div class="voz-item" onclick="selV(this,'shimmer')">🌟 <div><div style="font-size:12px;font-weight:600">Shimmer</div><div style="font-size:10px;color:#334155">Suave</div></div></div>
+        <div style={{ background:"#080c1a", border:"1.5px solid #131830", borderRadius:18, padding:28 }}>
+          {tab !== "forgot" && (
+            <div style={{ display:"flex", background:"#0d1020", borderRadius:10, padding:4, marginBottom:22, gap:4 }}>
+              {[["login","Entrar"],["register","Criar conta"]].map(([t,l]) => (
+                <button key={t} onClick={()=>{setTab(t);setMsg(null);}} style={{ flex:1, padding:"9px", borderRadius:8, fontSize:14, fontWeight:600, background:tab===t?"#131830":"transparent", color:tab===t?"#f1f5f9":"#475569" }}>{l}</button>
+              ))}
+            </div>
+          )}
+          {tab === "forgot" && (
+            <div style={{ marginBottom:18 }}>
+              <button onClick={()=>setTab("login")} style={{ background:"none", color:"#475569", fontSize:13 }}>← Voltar</button>
+              <div style={{ fontWeight:800, fontSize:19, marginTop:6 }}>Recuperar senha</div>
+            </div>
+          )}
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {tab === "register" && <input value={nm} onChange={e=>setNm(e.target.value)} placeholder="Seu nome completo"/>}
+            <input type="email" value={em} onChange={e=>setEm(e.target.value)} placeholder="voce@email.com" onKeyDown={e=>e.key==="Enter"&&go()}/>
+            {tab !== "forgot" && (
+              <div>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                  <span style={{ fontSize:12, color:"#334155" }}>Senha</span>
+                  {tab==="login" && <button onClick={()=>setTab("forgot")} style={{ background:"none", color:"#7c3aed", fontSize:12, fontWeight:600 }}>Esqueceu?</button>}
+                </div>
+                <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="••••••••" onKeyDown={e=>e.key==="Enter"&&go()}/>
+              </div>
+            )}
+            {msg && <div style={{ background:msg.e?"rgba(239,68,68,.1)":"rgba(16,185,129,.1)", border:`1.5px solid ${msg.e?"rgba(239,68,68,.3)":"rgba(16,185,129,.3)"}`, borderRadius:9, padding:"10px 14px", color:msg.e?"#ef4444":"#10b981", fontSize:13 }}>{msg.t}</div>}
+            <button onClick={go} disabled={load} style={{ background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:12, padding:"13px", fontSize:15, fontWeight:700, marginTop:2, display:"flex", alignItems:"center", justifyContent:"center", gap:8, boxShadow:"0 4px 20px rgba(124,58,237,.4)" }}>
+              {load?<><Spin s={18} c="white"/>Aguarde...</>:tab==="login"?"Entrar na plataforma":tab==="register"?"Criar minha conta":"Enviar link"}
+            </button>
           </div>
-          <div class="card" style="margin-bottom:0"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:10px">FORMATO</span>
-            <div class="fmt-item sel" onclick="selF(this,'youtube')"><span style="font-size:18px">▶️</span><div><div style="font-size:13px;font-weight:600;color:#22d3ee">YouTube</div><div style="font-size:11px;color:#334155">16:9</div></div></div>
-            <div class="fmt-item" onclick="selF(this,'shorts')"><span style="font-size:18px">📱</span><div><div style="font-size:13px;font-weight:600">Shorts/TikTok</div><div style="font-size:11px;color:#334155">9:16</div></div></div>
+          <div style={{ marginTop:20, paddingTop:16, borderTop:"1px solid #131830", textAlign:"center", fontSize:12, color:"#334155" }}>
+            Mais de <span style={{ color:"#8b5cf6", fontWeight:700 }}>12.400 criadores</span> já usam o Autovion
           </div>
         </div>
-        <button id="gerar-btn" onclick="gerar()" style="background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:13px;padding:15px;font-size:16px;font-weight:800;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 32px rgba(124,58,237,.45)">⚡ Gerar Vídeo Automático</button>
       </div>
+    </div>
+  );
+}
 
-      <!-- ARIA -->
-      <div id="pg-aria" style="display:none">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
-          <div><div style="font-weight:800;font-size:17px">ARIA <span style="background:rgba(34,211,238,.18);color:#22d3ee;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700">IA Adaptativa</span></div><div id="aria-ct" style="color:#475569;font-size:12px">0 vídeos analisados</div></div>
+// ── PIPELINE MODAL ────────────────────────────────────────────
+function PipelineModal({ open, step, erro, onDone, onRetry }) {
+  if (!open) return null;
+  const pct  = Math.min(Math.round((step/PIPELINE.length)*100),100);
+  const done = step >= PIPELINE.length;
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(4,5,10,.96)", backdropFilter:"blur(20px)", zIndex:9999, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+      <div className="fu" style={{ background:"#080c1a", border:`1.5px solid ${erro?"rgba(239,68,68,.5)":"rgba(124,58,237,.45)"}`, borderRadius:22, width:"100%", maxWidth:460, padding:30 }}>
+        <div style={{ textAlign:"center", marginBottom:24 }}>
+          <div style={{ width:68, height:68, borderRadius:20, background:erro?"rgba(239,68,68,.15)":"linear-gradient(135deg,#7c3aed,#4338ca)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:30, margin:"0 auto 14px", animation:done||erro?"none":"spin 4s linear infinite" }}>
+            {erro?"❌":done?"✅":"⚙️"}
+          </div>
+          <div style={{ fontWeight:900, fontSize:20, marginBottom:4 }}>{erro?"Ops, algo deu errado":done?"Vídeo Pronto! 🎬":"Gerando seu vídeo..."}</div>
+          <div style={{ color:"#475569", fontSize:13 }}>{erro||(done?"Pipeline concluído!":`Etapa ${Math.min(step+1,PIPELINE.length)} de ${PIPELINE.length}`)}</div>
         </div>
-        <div id="chat-box" style="background:#080c1a;border:1.5px solid #131830;border-radius:14px;padding:16px;height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-          <div style="text-align:center;padding:20px 0">
-            <div style="font-size:32px;margin-bottom:8px">🤖</div>
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px">Olá! Sou a ARIA.</div>
-            <div style="color:#475569;font-size:13px;line-height:1.6;margin-bottom:14px">Aprendo com seus vídeos e melhoro as sugestões.</div>
-            <div style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center">
-              <button onclick="si('Que tema criar hoje?')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:99px;padding:6px 12px;font-size:12px">Que tema criar hoje?</button>
-              <button onclick="si('Me dê um gancho viral')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:99px;padding:6px 12px;font-size:12px">Me dê um gancho viral</button>
-              <button onclick="si('Analise meus vídeos')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:99px;padding:6px 12px;font-size:12px">Analise meus vídeos</button>
+        {!erro && <>
+          <div style={{ marginBottom:18 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:7 }}>
+              <span style={{ color:"#475569" }}>Progresso</span>
+              <span style={{ color:"#8b5cf6", fontWeight:700 }}>{pct}%</span>
+            </div>
+            <div style={{ height:5, background:"#131830", borderRadius:5, overflow:"hidden" }}>
+              <div style={{ height:"100%", background:"linear-gradient(90deg,#7c3aed,#22d3ee)", borderRadius:5, width:`${pct}%`, transition:"width .6s ease" }}/>
             </div>
           </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6, marginBottom:22 }}>
+            {PIPELINE.map((s,i)=>{
+              const feito=i<step, atual=i===step;
+              return (
+                <div key={s.id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 13px", borderRadius:11, background:atual?"rgba(124,58,237,.1)":feito?"rgba(16,185,129,.06)":"transparent", border:`1px solid ${atual?"rgba(124,58,237,.4)":feito?"rgba(16,185,129,.2)":"#131830"}` }}>
+                  <div style={{ width:28, height:28, borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, background:feito?"rgba(16,185,129,.18)":atual?"rgba(124,58,237,.18)":"#0d1020", flexShrink:0 }}>
+                    {feito?"✓":atual?<Spin s={13} c="#a78bfa"/>:s.i}
+                  </div>
+                  <span style={{ fontSize:13, fontWeight:500, color:feito?"#10b981":atual?"#a78bfa":"#334155", flex:1 }}>{s.l}</span>
+                  {atual&&<span style={{ fontSize:10, color:"#7c3aed", animation:"pulse 1.4s infinite" }}>processando...</span>}
+                </div>
+              );
+            })}
+          </div>
+        </>}
+        {done&&!erro&&<button onClick={onDone} style={{ width:"100%", padding:13, background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:12, fontSize:15, fontWeight:700 }}>🎬 Ver Vídeo Gerado →</button>}
+        {erro&&<button onClick={onRetry} style={{ width:"100%", padding:13, background:"#0d1020", border:"1.5px solid #131830", color:"#f1f5f9", borderRadius:12, fontSize:15, fontWeight:600 }}>← Tentar novamente</button>}
+      </div>
+    </div>
+  );
+}
+
+// ── CRIAR VÍDEO ───────────────────────────────────────────────
+function Criar({ onCriado, user }) {
+  const [tema, setTema] = useState("");
+  const [est, setEst]   = useState("viral");
+  const [voz, setVoz]   = useState("echo");
+  const [fmt, setFmt]   = useState("youtube");
+  const [load, setLoad] = useState(false);
+  const [step, setStep] = useState(-1);
+  const [erro, setErro] = useState("");
+  const [pErr, setPErr] = useState("");
+
+  const pode = user.plano !== "free" || (user.creditos||0) > 0;
+
+  async function gerar() {
+    if (!tema.trim()) return setErro("Digite um tema para o vídeo.");
+    if (!pode)        return setErro("Créditos esgotados. Faça upgrade.");
+    setErro(""); setPErr(""); setLoad(true); setStep(0);
+    try {
+      const prompt = `Você é um roteirista expert em conteúdo viral para YouTube com milhões de views.
+Crie um roteiro COMPLETO sobre: "${tema}"
+Estilo: ${est.toUpperCase()}
+Formato: ${fmt==="shorts"?"YouTube Shorts — máximo 60s, 3-4 cenas":"YouTube — 90 a 150s, 5-7 cenas"}
+REGRAS: Gancho nos 3 primeiros segundos, cliffhanger entre cenas, linguagem conversacional.
+RETORNE APENAS JSON VÁLIDO SEM TEXTO ADICIONAL:
+{"titulo":"Título SEO","descricao":"1 linha","tags":["t1","t2","t3"],"duracao_total":120,"hook_score":8.5,"cenas":[{"numero":1,"titulo":"Nome","narracao":"Texto narrado.","descricao_visual":"Visual","prompt_imagem":"Cinematic prompt English","duracao":20,"emocao":"intriga"}]}`;
+
+      const raw    = await callClaude(prompt);
+      const script = JSON.parse(raw.replace(/```json|```/g,"").trim());
+
+      for (let i = 1; i < PIPELINE.length; i++) {
+        setStep(i);
+        await sleep(PIPELINE[i].ms);
+      }
+      setStep(PIPELINE.length);
+      onCriado({ id:uid(), tema, estilo:est, voz, formato:fmt, status:"ready", script, criadoEm:new Date().toISOString() });
+    } catch(e) {
+      setPErr(e.message || "Erro desconhecido.");
+      setLoad(false);
+    }
+  }
+
+  return (
+    <div style={{ maxWidth:640, margin:"0 auto" }}>
+      <PipelineModal open={step>=0&&load} step={step} erro={pErr} onDone={()=>{setLoad(false);setStep(-1);}} onRetry={()=>{setLoad(false);setStep(-1);setPErr("");}}/>
+      <div style={{ marginBottom:24 }}>
+        <div style={{ fontWeight:900, fontSize:24, letterSpacing:"-.02em", marginBottom:4 }}>
+          Criar Vídeo <span style={{ background:"linear-gradient(135deg,#a78bfa,#22d3ee)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>com IA</span>
         </div>
-        <div style="display:flex;gap:9px">
-          <textarea id="aria-in" rows="2" placeholder="Pergunte à ARIA... (Enter envia)" style="flex:1;resize:none;line-height:1.5;border-radius:11px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendA()}"></textarea>
-          <button onclick="sendA()" style="padding:0 16px;backgroun
+        <div style={{ color:"#475569", fontSize:14 }}>Do tema ao vídeo em 1 clique. Pipeline 100% automatizado.</div>
+      </div>
+
+      {!pode && <div style={{ background:"rgba(239,68,68,.08)", border:"1.5px solid rgba(239,68,68,.25)", borderRadius:12, padding:"12px 16px", marginBottom:14, color:"#ef4444", fontSize:13 }}>⚠️ Créditos esgotados. Faça upgrade para continuar.</div>}
+
+      <Card style={{ padding:18, marginBottom:12 }}>
+        <div style={{ fontSize:11, color:"#334155", fontWeight:700, letterSpacing:".08em", marginBottom:8 }}>TEMA DO VÍDEO *</div>
+        <input value={tema} onChange={e=>{setTema(e.target.value);setErro("");}} placeholder="Ex: A verdade sombria sobre dormir menos de 6 horas..." onKeyDown={e=>e.key==="Enter"&&gerar()}/>
+        {erro && <div style={{ color:"#ef4444", fontSize:12, marginTop:6 }}>{erro}</div>}
+        <div style={{ fontSize:11, color:"#334155", marginTop:5 }}>💡 Temas específicos e provocativos geram mais retenção</div>
+      </Card>
+
+      <Card style={{ padding:18, marginBottom:12 }}>
+        <div style={{ fontSize:11, color:"#334155", fontWeight:700, letterSpacing:".08em", marginBottom:12 }}>ESTILO NARRATIVO</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+          {ESTILOS.map(s=>(
+            <div key={s.id} onClick={()=>setEst(s.id)} style={{ padding:"11px 12px", borderRadius:11, cursor:"pointer", background:est===s.id?"rgba(124,58,237,.12)":"#0d1020", border:`1.5px solid ${est===s.id?"rgba(124,58,237,.5)":"#131830"}`, display:"flex", alignItems:"center", gap:9 }}>
+              <span style={{ fontSize:17 }}>{s.e}</span>
+              <div>
+                <div style={{ fontSize:12, fontWeight:700, color:est===s.id?"#a78bfa":"#f1f5f9" }}>{s.l}</div>
+                <div style={{ fontSize:10, color:"#334155" }}>{s.d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:14 }}>
+        <Card style={{ padding:16 }}>
+          <div style={{ fontSize:11, color:"#334155", fontWeight:700, letterSpacing:".08em", marginBottom:10 }}>VOZ</div>
+          {VOZES.map(v=>(
+            <div key={v.id} onClick={()=>setVoz(v.id)} style={{ padding:"8px 10px", borderRadius:9, cursor:"pointer", marginBottom:5, background:voz===v.id?"rgba(79,70,229,.14)":"#0d1020", border:`1.5px solid ${voz===v.id?"rgba(99,102,241,.5)":"#131830"}`, display:"flex", alignItems:"center", gap:8 }}>
+              <span>{v.i}</span>
+              <div>
+                <div style={{ fontSize:12, fontWeight:600, color:voz===v.id?"#818cf8":"#f1f5f9" }}>{v.l}</div>
+                <div style={{ fontSize:10, color:"#334155" }}>{v.d}</div>
+              </div>
+            </div>
+          ))}
+        </Card>
+        <Card style={{ padding:16 }}>
+          <div style={{ fontSize:11, color:"#334155", fontWeight:700, letterSpacing:".08em", marginBottom:10 }}>FORMATO</div>
+          {[{id:"youtube",l:"YouTube",r:"16:9",i:"▶️"},{id:"shorts",l:"Shorts/TikTok",r:"9:16",i:"📱"}].map(f=>(
+            <div key={f.id} onClick={()=>setFmt(f.id)} style={{ padding:"10px 12px", borderRadius:10, cursor:"pointer", marginBottom:8, background:fmt===f.id?"rgba(6,182,212,.1)":"#0d1020", border:`1.5px solid ${fmt===f.id?"rgba(6,182,212,.4)":"#131830"}`, display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ fontSize:18 }}>{f.i}</span>
+              <div>
+                <div style={{ fontSize:13, fontWeight:600, color:fmt===f.id?"#22d3ee":"#f1f5f9" }}>{f.l}</div>
+                <div style={{ fontSize:11, color:"#334155" }}>{f.r}</div>
+              </div>
+            </div>
+          ))}
+        </Card>
+      </div>
+
+      <button onClick={gerar} disabled={load||!tema.trim()||!pode} style={{ width:"100%", padding:15, background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:13, fontSize:16, fontWeight:800, boxShadow:"0 8px 30px rgba(124,58,237,.4)", display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
+        {load?<><Spin s={20} c="white"/>Gerando pipeline...</>:"⚡ Gerar Vídeo Automático"}
+      </button>
+    </div>
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+function Dashboard({ projetos, onAbrir, onDeletar, user, onUpgrade }) {
+  const total    = projetos.length;
+  const prontos  = projetos.filter(p=>p.status==="ready").length;
+  const durTotal = projetos.reduce((a,p)=>a+(p.script?.duracao_total||0),0);
+
+  return (
+    <div>
+      <div style={{ marginBottom:24, display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
+        <div>
+          <div style={{ fontWeight:900, fontSize:22, letterSpacing:"-.02em" }}>
+            Olá, <span style={{ background:"linear-gradient(135deg,#a78bfa,#22d3ee)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>{user.nome.split(" ")[0]}</span> 👋
+          </div>
+          <div style={{ color:"#475569", fontSize:13, marginTop:3 }}>Seu estúdio de conteúdo com IA</div>
+        </div>
+        {user.plano==="free" && (
+          <button onClick={onUpgrade} style={{ background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:10, padding:"9px 18px", fontSize:13, fontWeight:700, boxShadow:"0 4px 16px rgba(124,58,237,.4)" }}>
+            ⚡ Upgrade Pro
+          </button>
+        )}
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
+        {[
+          { l:"Vídeos",        v:total,           i:"🎬", c:"#8b5cf6" },
+          { l:"Prontos",       v:prontos,         i:"✅", c:"#10b981" },
+          { l:"Duração Total", v:fmtDur(durTotal),i:"⏱️", c:"#22d3ee" },
+        ].map(s=>(
+          <Card key={s.l} style={{ padding:16, position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg,${s.c}88,transparent)` }}/>
+            <div style={{ fontSize:20, marginBottom:8 }}>{s.i}</div>
+            <div style={{ fontWeight:900, fontSize:24, color:s.c }}>{s.v}</div>
+            <div style={{ fontSize:11, color:"#334155", marginTop:2 }}>{s.l}</div>
+          </Card>
+        ))}
+      </div>
+
+      {projetos.length===0 ? (
+        <Card style={{ textAlign:"center", padding:"50px 20px", border:"1.5px dashed #131830" }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>🎬</div>
+          <div style={{ fontWeight:800, fontSize:18, marginBottom:6 }}>Nenhum vídeo ainda</div>
+          <div style={{ color:"#475569", fontSize:13 }}>Vá em "Criar Vídeo" para gerar seu primeiro projeto</div>
+        </Card>
+      ) : (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:14 }}>
+          {projetos.map((p,i)=>(
+            <div key={p.id} className="fu" style={{ background:"#080c1a", border:"1.5px solid #131830", borderRadius:14, overflow:"hidden", transition:"border-color .2s, transform .2s", animationDelay:`${i*.05}s` }}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor="#2d3560";e.currentTarget.style.transform="translateY(-2px)"}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor="#131830";e.currentTarget.style.transform="translateY(0)"}}>
+              <div style={{ height:130, background:"linear-gradient(135deg,#0d1020,#131830)", position:"relative", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:44 }} onClick={()=>onAbrir(p)}>
+                {ESTILOS.find(s=>s.id===p.estilo)?.e||"🎬"}
+                <div style={{ position:"absolute", bottom:8, left:8, background:"rgba(0,0,0,.8)", borderRadius:6, padding:"2px 8px", fontSize:11, color:"#94a3b8", fontWeight:600 }}>
+                  {fmtDur(p.script?.duracao_total||0)}
+                </div>
+                <div style={{ position:"absolute", top:8, right:8 }}><Pill c="#10b981">Pronto</Pill></div>
+              </div>
+              <div style={{ padding:"12px 14px" }}>
+                <div style={{ fontWeight:700, fontSize:13, marginBottom:3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", lineHeight:1.4 }}>
+                  {p.script?.titulo||p.tema}
+                </div>
+                <div style={{ fontSize:11, color:"#334155", marginBottom:10 }}>
+                  {new Date(p.criadoEm).toLocaleDateString("pt-BR")} · {p.estilo} · {p.formato}
+                </div>
+                <div style={{ display:"flex", gap:7 }}>
+                  <button onClick={()=>onAbrir(p)} style={{ flex:1, padding:"8px", background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:8, fontSize:12, fontWeight:700 }}>▶ Abrir</button>
+                  <button onClick={()=>onDeletar(p.id)} style={{ padding:"8px 12px", background:"#0d1020", border:"1.5px solid #131830", color:"#475569", borderRadius:8, fontSize:13 }}>🗑</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── VISUALIZADOR ──────────────────────────────────────────────
+function Visualizador({ projeto, onFechar }) {
+  const [cena, setCena] = useState(0);
+  if (!projeto?.script) return null;
+  const cenas = projeto.script.cenas || [];
+  const cur   = cenas[cena];
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"#04050a", zIndex:900, overflow:"auto" }}>
+      <div style={{ position:"sticky", top:0, background:"rgba(8,12,26,.92)", backdropFilter:"blur(14px)", borderBottom:"1.5px solid #131830", padding:"12px 20px", display:"flex", alignItems:"center", gap:12, zIndex:10 }}>
+        <button onClick={onFechar} style={{ background:"#0d1020", border:"1.5px solid #131830", color:"#94a3b8", borderRadius:8, padding:"7px 14px", fontSize:13 }}>← Voltar</button>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontWeight:700, fontSize:14, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{projeto.script.titulo}</div>
+          <div style={{ fontSize:11, color:"#475569" }}>{cenas.length} cenas · {fmtDur(projeto.script.duracao_total)} · {projeto.formato}</div>
+        </div>
+        <Pill c="#10b981">Pronto</Pill>
+        <button style={{ background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:9, padding:"8px 16px", fontSize:13, fontWeight:700 }}>⬇ Download</button>
+      </div>
+
+      <div style={{ maxWidth:900, margin:"0 auto", padding:20 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 260px", gap:18 }}>
+          <div>
+            <Card style={{ overflow:"hidden", aspectRatio:projeto.formato==="shorts"?"9/16":"16/9", maxHeight:projeto.formato==="shorts"?500:"auto", position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(124,58,237,.1),rgba(67,56,202,.05))" }}/>
+              <div style={{ position:"relative", zIndex:1, textAlign:"center", padding:28 }}>
+                <div style={{ fontSize:52, marginBottom:14 }}>{ESTILOS.find(s=>s.id===projeto.estilo)?.e}</div>
+                <div style={{ fontWeight:800, fontSize:16, marginBottom:10, lineHeight:1.3 }}>{cur?.titulo}</div>
+                <div style={{ color:"#94a3b8", fontSize:13, lineHeight:1.7, background:"rgba(4,5,10,.7)", borderRadius:12, padding:"12px 16px" }}>{cur?.narracao}</div>
+              </div>
+              <div style={{ position:"absolute", bottom:14, left:"50%", transform:"translateX(-50%)", background:"rgba(0,0,0,.85)", borderRadius:7, padding:"4px 14px", fontSize:11, color:"white", whiteSpace:"nowrap", maxWidth:"80%", overflow:"hidden", textOverflow:"ellipsis" }}>
+                {cur?.narracao?.split(" ").slice(0,7).join(" ")}...
+              </div>
+            </Card>
+            <div style={{ display:"flex", gap:6, marginTop:10, flexWrap:"wrap" }}>
+              {cenas.map((_,i)=>(
+                <button key={i} onClick={()=>setCena(i)} style={{ padding:"5px 13px", borderRadius:99, border:`1.5px solid ${cena===i?"rgba(124,58,237,.5)":"#131830"}`, background:cena===i?"rgba(124,58,237,.15)":"#080c1a", color:cena===i?"#a78bfa":"#475569", fontSize:12, fontWeight:600 }}>
+                  {i+1}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {[
+              { t:"CENA ATUAL",    items:[["Número",`Cena ${cur?.numero}`],["Emoção",cur?.emocao],["Duração",`${cur?.duracao}s`]] },
+              { t:"CONFIGURAÇÕES", items:[["Estilo",projeto.estilo],["Voz",projeto.voz],["Formato",projeto.formato],["Hook Score",projeto.script?.hook_score||"—"]] },
+            ].map(s=>(
+              <Card key={s.t} style={{ padding:14 }}>
+                <div style={{ fontSize:10, color:"#334155", fontWeight:700, letterSpacing:".08em", marginBottom:10 }}>{s.t}</div>
+                {s.items.map(([k,v])=>(
+                  <div key={k} style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:6 }}>
+                    <span style={{ color:"#475569" }}>{k}</span>
+                    <span style={{ fontWeight:600 }}>{v}</span>
+                  </div>
+                ))}
+              </Card>
+            ))}
+            <Card style={{ padding:14 }}>
+              <div style={{ fontSize:10, color:"#334155", fontWeight:700, letterSpacing:".08em", marginBottom:8 }}>PROMPT IMAGEM</div>
+              <div style={{ fontSize:11, color:"#475569", lineHeight:1.6, fontStyle:"italic" }}>{cur?.prompt_imagem}</div>
+            </Card>
+          </div>
+        </div>
+
+        <div style={{ marginTop:22 }}>
+          <div style={{ fontWeight:800, fontSize:16, marginBottom:12 }}>Todas as Cenas</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+            {cenas.map((s,i)=>(
+              <div key={i} onClick={()=>setCena(i)} style={{ background:i===cena?"rgba(124,58,237,.06)":"#080c1a", border:`1.5px solid ${i===cena?"rgba(124,58,237,.4)":"#131830"}`, borderRadius:11, padding:13, cursor:"pointer" }}>
+                <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                  <div style={{ width:26, height:26, borderRadius:7, flexShrink:0, background:i===cena?"linear-gradient(135deg,#7c3aed,#4338ca)":"#0d1020", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, color:i===cena?"white":"#475569" }}>{s.numero}</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontWeight:600, fontSize:13, marginBottom:3 }}>{s.titulo}</div>
+                    <div style={{ fontSize:12, color:"#475569", lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{s.narracao}</div>
+                  </div>
+                  <span style={{ fontSize:11, color:"#334155", flexShrink:0 }}>{s.duracao}s</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ARIA CHAT ─────────────────────────────────────────────────
+function ARIA({ projetos }) {
+  const [msgs, setMsgs]   = useLS("aria_msgs", []);
+  const [input, setInput] = useState("");
+  const [load, setLoad]   = useState(false);
+  const fimRef = useRef(null);
+
+  useEffect(()=>{ fimRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs]);
+
+  async function enviar() {
+    if (!input.trim() || load) return;
+    const texto = input;
+    const msg = { id:uid(), role:"user", content:texto };
+    setMsgs(m=>[...m, msg]);
+    setInput(""); setLoad(true);
+
+    const memoria   = `Usuário tem ${projetos.length} vídeos. Estilos: ${projetos.map(p=>p.estilo).join(", ")||"nenhum"}. Temas: ${projetos.map(p=>p.tema).slice(0,3).join(", ")||"nenhum"}.`;
+    const historico = msgs.slice(-6).map(m=>`${m.role==="user"?"Usuário":"ARIA"}: ${m.content}`).join("\n");
+
+    try {
+      const prompt = `Você é ARIA, IA assistente do Autovion que aprende com o histórico do usuário.
+MEMÓRIA: ${memoria}
+HISTÓRICO: ${historico||"Início da conversa."}
+MENSAGEM: "${texto}"
+Responda como ARIA: útil, criativo, conciso. Máximo 150 palavras.`;
+      const reply = await callClaude(prompt, 500);
+      setMsgs(m=>[...m, { id:uid(), role:"aria", content:reply }]);
+    } catch(e) {
+      setMsgs(m=>[...m, { id:uid(), role:"aria", content:`Erro: ${e.message}` }]);
+    }
+    setLoad(false);
+  }
+
+  return (
+    <div style={{ height:"calc(100vh - 120px)", display:"flex", flexDirection:"column" }}>
+      <div style={{ marginBottom:16 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+          <div style={{ width:40, height:40, borderRadius:11, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:19, boxShadow:"0 0 20px rgba(124,58,237,.4)", animation:"glow 3s infinite" }}>🤖</div>
+          <div>
+            <div style={{ fontWeight:800, fontSize:17 }}>ARIA <Pill c="#22d3ee">IA Adaptativa</Pill></div>
+            <div style={{ color:"#475569", fontSize:12 }}>{projetos.length} vídeos analisados · aprendendo com você</div>
+          </div>
+        </div>
+        <div style={{ background:"#080c1a", borderRadius:10, padding:"9px 14px", border:"1.5px solid #131830", display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:12 }}>🧠</span>
+          <div style={{ flex:1, height:3, background:"#131830", borderRadius:3, overflow:"hidden" }}>
+            <div style={{ height:"100%", background:"linear-gradient(90deg,#7c3aed,#22d3ee)", width:`${Math.min(projetos.length*20,100)}%` }}/>
+          </div>
+          <span style={{ fontSize:11, color:"#334155" }}>{Math.min(projetos.length*20,100)}%</span>
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:10, paddingRight:4 }}>
+        {msgs.length===0 && (
+          <div style={{ textAlign:"center", padding:"40px 20px" }}>
+            <div style={{ fontSize:38, marginBottom:10 }}>🤖</div>
+            <div style={{ fontWeight:700, fontSize:15, marginBottom:6 }}>Olá! Sou a ARIA.</div>
+            <div style={{ color:"#475569", fontSize:13, lineHeight:1.7, marginBottom:20 }}>Aprendo com cada vídeo que você cria.<br/>Quanto mais você usa, melhores ficam minhas sugestões.</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:7, justifyContent:"center" }}>
+              {["Que tema criar hoje?","Analise meus vídeos","Me dê um gancho viral","Quais estilos funcionam melhor?"].map(s=>(
+                <button key={s} onClick={()=>setInput(s)} style={{ background:"#0d1020", border:"1.5px solid #131830", color:"#94a3b8", borderRadius:99, padding:"7px 14px", fontSize:12, fontWeight:500 }}>{s}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        {msgs.map(m=>(
+          <div key={m.id} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start" }}>
+            {m.role==="aria" && <div style={{ width:24, height:24, borderRadius:7, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, marginRight:7, flexShrink:0, alignSelf:"flex-end" }}>🤖</div>}
+            <div style={{ maxWidth:"82%", padding:"11px 15px", borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px", background:m.role==="user"?"linear-gradient(135deg,#7c3aed,#4338ca)":"#080c1a", border:m.role==="aria"?"1.5px solid #131830":"none", color:m.role==="user"?"white":"#cbd5e1", fontSize:14, lineHeight:1.6 }}>
+              {m.content}
+            </div>
+          </div>
+        ))}
+        {load && (
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <div style={{ width:24, height:24, borderRadius:7, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11 }}>🤖</div>
+            <div style={{ background:"#080c1a", border:"1.5px solid #131830", borderRadius:"16px 16px 16px 4px", padding:"11px 15px", display:"flex", gap:8, alignItems:"center" }}>
+              <Spin s={14} c="#a78bfa"/>
+              <span style={{ color:"#475569", fontSize:13, animation:"pulse 1.5s infinite" }}>Analisando...</span>
+            </div>
+          </div>
+        )}
+        <div ref={fimRef}/>
+      </div>
+
+      <div style={{ paddingTop:12, borderTop:"1.5px solid #131830", display:"flex", gap:9 }}>
+        <textarea value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviar();}}} placeholder="Pergunte à ARIA... (Enter para enviar)" rows={2} style={{ flex:1, padding:"10px 13px", resize:"none", lineHeight:1.5, borderRadius:11 }}/>
+        <button onClick={enviar} disabled={load||!input.trim()} style={{ padding:"0 16px", background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:11, alignSelf:"stretch", fontSize:16 }}>
+          {load?<Spin s={16} c="white"/>:"→"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── CONFIGURAÇÕES ─────────────────────────────────────────────
+function Config({ user, onSair }) {
+  const [salvo, setSalvo] = useState(false);
+
+  function salvar() { setSalvo(true); setTimeout(()=>setSalvo(false), 2000); }
+
+  return (
+    <div style={{ maxWidth:560 }}>
+      <div style={{ fontWeight:800, fontSize:22, marginBottom:4 }}>Configurações</div>
+      <div style={{ color:"#475569", fontSize:14, marginBottom:24 }}>Gerencie sua conta e preferências</div>
+
+      <Card style={{ padding:18, marginBottom:14, display:"flex", alignItems:"center", gap:14 }}>
+        <div style={{ width:48, height:48, borderRadius:13, background:"linear-gradient(135deg,#7c3aed,#4338ca)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0, fontWeight:800 }}>
+          {user.nome[0].toUpperCase()}
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ fontWeight:700, fontSize:15 }}>{user.nome}</div>
+          <div style={{ color:"#475569", fontSize:13 }}>{user.email}</div>
+        </div>
+        <Pill c={user.plano==="pro"?"#8b5cf6":user.plano==="agency"?"#f59e0b":"#64748b"}>{user.plano.toUpperCase()}</Pill>
+      </Card>
+
+      <Card style={{ padding:18, marginBottom:14 }}>
+        <div style={{ fontWeight:700, fontSize:14, marginBottom:12 }}>ℹ️ Sobre a plataforma</div>
+        <div style={{ fontSize:13, color:"#475569", lineHeight:1.7 }}>
+          O Autovion utiliza IA para gerar roteiros, imagens e narração automaticamente.<br/>
+          Nenhuma configuração adicional é necessária — tudo funciona com sua conta.
+        </div>
+      </Card>
+
+      <div style={{ display:"flex", gap:10 }}>
+        <button onClick={salvar} style={{ background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:11, padding:"11px 26px", fontSize:14, fontWeight:700, boxShadow:"0 4px 16px rgba(124,58,237,.4)" }}>
+          {salvo?"✓ Salvo!":"💾 Salvar"}
+        </button>
+        <button onClick={onSair} style={{ background:"#0d1020", border:"1.5px solid #131830", color:"#ef4444", borderRadius:11, padding:"11px 20px", fontSize:14, fontWeight:600 }}>
+          ↩ Sair da conta
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── PLANOS ────────────────────────────────────────────────────
+function Planos({ user, onUpgrade, onVoltar }) {
+  const [sel, setSel]   = useState("pro");
+  const [load, setLoad] = useState(false);
+  const [ok, setOk]     = useState(false);
+
+  async function assinar() {
+    setLoad(true); await sleep(1800);
+    setLoad(false); setOk(true);
+    await sleep(1200); onUpgrade(sel);
+  }
+
+  if (ok) return (
+    <div style={{ minHeight:"100vh", background:"#04050a", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ textAlign:"center" }} className="fu">
+        <div style={{ fontSize:64, marginBottom:14 }}>🎉</div>
+        <div style={{ fontWeight:900, fontSize:26, marginBottom:8 }}>Plano <span style={{ color:"#a78bfa" }}>{PLANOS.find(p=>p.id===sel)?.n}</span> ativado!</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth:900, margin:"0 auto", padding:20 }}>
+      <button onClick={onVoltar} style={{ background:"#080c1a", border:"1.5px solid #131830", color:"#94a3b8", borderRadius:9, padding:"8px 14px", fontSize:13, marginBottom:24 }}>← Voltar</button>
+      <div style={{ textAlign:"center", marginBottom:36 }}>
+        <div style={{ fontWeight:900, fontSize:28, letterSpacing:"-.02em", marginBottom:6 }}>
+          Escolha seu <span style={{ background:"linear-gradient(135deg,#a78bfa,#22d3ee)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>plano</span>
+        </div>
+        <div style={{ color:"#475569" }}>Cancele quando quiser. Sem fidelidade.</div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16, marginBottom:32 }}>
+        {PLANOS.map(p=>(
+          <div key={p.id} onClick={()=>setSel(p.id)} style={{ background:p.star?"linear-gradient(145deg,#0d1020,#131830)":"#080c1a", border:`${sel===p.id?2:1.5}px solid ${sel===p.id?p.c:"#131830"}`, borderRadius:18, padding:24, cursor:"pointer", position:"relative", transition:"transform .2s", animation:p.star?"glow 3s infinite":"none" }}
+            onMouseEnter={e=>e.currentTarget.style.transform="translateY(-3px)"}
+            onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+            {p.star && <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", padding:"3px 14px", borderRadius:99, fontSize:11, fontWeight:800, whiteSpace:"nowrap" }}>Mais Popular</div>}
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+              <div style={{ fontWeight:800, fontSize:16, color:sel===p.id?p.c:"#f1f5f9" }}>{p.n}</div>
+              <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${p.c}`, background:sel===p.id?p.c:"transparent", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, color:"white" }}>{sel===p.id&&"✓"}</div>
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <span style={{ fontWeight:900, fontSize:32, color:p.c }}>{p.p===0?"Grátis":`R$${p.p}`}</span>
+              {p.p>0&&<span style={{ color:"#475569", fontSize:13 }}>/mês</span>}
+            </div>
+            {p.f.map((feat,i)=><div key={i} style={{ fontSize:12, color:"#94a3b8", marginBottom:6, display:"flex", gap:7 }}><span style={{ color:p.c }}>✓</span>{feat}</div>)}
+          </div>
+        ))}
+      </div>
+
+      {sel!=="free" && (
+        <div style={{ maxWidth:420, margin:"0 auto" }}>
+          <Card style={{ padding:24 }}>
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:16 }}>💳 Dados de Pagamento</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+              <input placeholder="Nome no cartão"/>
+              <input placeholder="0000 0000 0000 0000" style={{ fontFamily:"monospace", letterSpacing:".1em" }}/>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                <input placeholder="MM/AA"/>
+                <input placeholder="CVV"/>
+              </div>
+              <button onClick={assinar} disabled={load} style={{ padding:"13px", background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:11, fontSize:15, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", gap:9 }}>
+                {load?<><Spin s={18} c="white"/>Processando...</>:`Assinar ${PLANOS.find(p=>p.id===sel)?.n} — R$${PLANOS.find(p=>p.id===sel)?.p}/mês`}
+              </button>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────
+function App() {
+  const [user, setUser]         = useLS("autovion_user", null);
+  const [projetos, setProjetos] = useLS("autovion_projetos", []);
+  const [pagina, setPagina]     = useState("dashboard");
+  const [vendo, setVendo]       = useState(null);
+  const [planos, setPlanos]     = useState(false);
+  const [sidebar, setSidebar]   = useState(true);
+
+  if (!user)  return <Auth onLogin={u=>setUser(u)}/>;
+  if (planos) return <Planos user={user} onUpgrade={plano=>{setUser({...user,plano,creditos:99999});setPlanos(false);}} onVoltar={()=>setPlanos(false)}/>;
+  if (vendo)  return <Visualizador projeto={vendo} onFechar={()=>setVendo(null)}/>;
+
+  function handleCriado(proj) {
+    setProjetos([proj, ...projetos]);
+    setVendo(proj);
+    if (user.plano==="free") setUser({...user, creditos:Math.max(0,(user.creditos||0)-1)});
+  }
+
+  const NAV = [
+    { id:"dashboard", icon:"▣", label:"Dashboard"     },
+    { id:"criar",     icon:"⚡", label:"Criar Vídeo"   },
+    { id:"aria",      icon:"🤖", label:"ARIA — IA"     },
+    { id:"config",    icon:"⚙️", label:"Configurações" },
+  ];
+
+  return (
+    <div style={{ display:"flex", minHeight:"100vh", background:"#04050a" }}>
+      <aside style={{ width:sidebar?215:56, flexShrink:0, background:"#06080f", borderRight:"1.5px solid #131830", display:"flex", flexDirection:"column", position:"sticky", top:0, height:"100vh", transition:"width .25s", overflow:"hidden" }}>
+        <div style={{ padding:"16px 12px", borderBottom:"1.5px solid #131830", display:"flex", alignItems:"center", justifyContent:sidebar?"space-between":"center" }}>
+          {sidebar && <Logo/>}
+          <button onClick={()=>setSidebar(v=>!v)} style={{ background:"#0d1020", border:"1.5px solid #131830", borderRadius:8, width:26, height:26, color:"#475569", fontSize:12, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            {sidebar?"◀":"▶"}
+          </button>
+        </div>
+        <nav style={{ padding:"10px 8px", flex:1 }}>
+          {NAV.map(item=>(
+            <div key={item.id} onClick={()=>setPagina(item.id)} style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 11px", borderRadius:10, cursor:"pointer", marginBottom:3, justifyContent:sidebar?"flex-start":"center", background:pagina===item.id?"rgba(124,58,237,.15)":"transparent", color:pagina===item.id?"#a78bfa":"#475569", border:`1.5px solid ${pagina===item.id?"rgba(124,58,237,.3)":"transparent"}`, transition:"all .15s", fontSize:14, fontWeight:500 }}>
+              <span style={{ fontSize:15, flexShrink:0 }}>{item.icon}</span>
+              {sidebar && <span>{item.label}</span>}
+              {item.id==="aria" && sidebar && <span style={{ marginLeft:"auto", background:"rgba(34,211,238,.2)", color:"#22d3ee", borderRadius:99, fontSize:9, padding:"1px 6px", fontWeight:800 }}>AI</span>}
+            </div>
+          ))}
+        </nav>
+        {sidebar && (
+          <div style={{ padding:"10px 12px", borderTop:"1.5px solid #131830" }}>
+            <div style={{ background:"rgba(124,58,237,.1)", border:"1.5px solid rgba(124,58,237,.25)", borderRadius:11, padding:"10px 12px", marginBottom:8 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                <span style={{ fontSize:11, color:"#a78bfa", fontWeight:700 }}>{user.plano.toUpperCase()}</span>
+                {user.plano==="free" && <button onClick={()=>setPlanos(true)} style={{ background:"#7c3aed", borderRadius:6, padding:"2px 7px", fontSize:10, color:"white", fontWeight:700, fontFamily:"'Outfit',sans-serif" }}>⬆</button>}
+              </div>
+              {user.plano==="free" && <>
+                <div style={{ height:3, background:"#131830", borderRadius:3, overflow:"hidden" }}>
+                  <div style={{ height:"100%", background:"linear-gradient(90deg,#7c3aed,#22d3ee)", width:`${((3-(user.creditos||0))/3)*100}%` }}/>
+                </div>
+                <div style={{ fontSize:10, color:"#334155", marginTop:4 }}>{user.creditos||0}/3 créditos</div>
+              </>}
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#7c3aed,#4338ca)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800, flexShrink:0 }}>{user.nome[0].toUpperCase()}</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:12, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user.nome}</div>
+                <div style={{ fontSize:10, color:"#334155", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user.email}</div>
+              </div>
+              <button onClick={()=>setUser(null)} style={{ background:"none", color:"#334155", fontSize:12 }} title="Sair">↩</button>
+            </div>
+          </div>
+        )}
+      </aside>
+
+      <div style={{ flex:1, minWidth:0, overflow:"auto", display:"flex", flexDirection:"column" }}>
+        <header style={{ position:"sticky", top:0, background:"rgba(6,8,15,.92)", backdropFilter:"blur(14px)", borderBottom:"1.5px solid #131830", padding:"12px 22px", display:"flex", alignItems:"center", justifyContent:"space-between", zIndex:50 }}>
+          <div style={{ fontWeight:600, fontSize:14, color:"#475569" }}>{NAV.find(n=>n.id===pagina)?.label}</div>
+          <div style={{ display:"flex", gap:9 }}>
+            <button onClick={()=>setPagina("criar")} style={{ background:"#0d1020", border:"1.5px solid #131830", color:"#94a3b8", borderRadius:9, padding:"7px 15px", fontSize:13 }}>+ Novo Vídeo</button>
+            {user.plano==="free" && <button onClick={()=>setPlanos(true)} style={{ background:"linear-gradient(135deg,#7c3aed,#4338ca)", color:"white", borderRadius:9, padding:"7px 15px", fontSize:13, fontWeight:700, boxShadow:"0 4px 14px rgba(124,58,237,.4)" }}>⚡ Pro</button>}
+          </div>
+        </header>
+
+        <main style={{ flex:1, padding:22 }}>
+          {pagina==="dashboard" && <Dashboard projetos={projetos} onAbrir={setVendo} onDeletar={id=>setProjetos(projetos.filter(p=>p.id!==id))} user={user} onUpgrade={()=>setPlanos(true)}/>}
+          {pagina==="criar"     && <Criar onCriado={handleCriado} user={user}/>}
+          {pagina==="aria"      && <ARIA projetos={projetos}/>}
+          {pagina==="config"    && <Config user={user} onSair={()=>setUser(null)}/>}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
