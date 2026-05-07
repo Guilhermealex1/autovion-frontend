@@ -7,177 +7,257 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#04050a;color:#f1f5f9;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
-input,textarea{background:#0d1020;border:1.5px solid #1a1f38;color:#f1f5f9;font-family:inherit;font-size:14px;outline:none;border-radius:10px;width:100%;padding:11px 14px}
+input,textarea,select{background:#0d1020;border:1.5px solid #1a1f38;color:#f1f5f9;font-family:inherit;font-size:14px;outline:none;border-radius:10px;width:100%;padding:11px 14px}
 input:focus,textarea:focus{border-color:#7c3aed}
 input::placeholder,textarea::placeholder{color:#475569}
 button{cursor:pointer;font-family:inherit;border:none;transition:all .2s}
 button:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:12px;padding:13px 20px;font-size:15px;font-weight:700;width:100%;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-secondary{background:#0d1020;border:1.5px solid #1a1f38;color:#94a3b8;border-radius:10px;padding:9px 16px;font-size:13px}
 .card{background:#080c1a;border:1.5px solid #131830;border-radius:14px;padding:18px;margin-bottom:12px}
+.label{font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;margin-bottom:8px;display:block}
+.error{color:#ef4444;font-size:12px;margin-top:6px}
+.pill{border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite}
+
+/* LAYOUT */
 #app{display:flex;min-height:100vh}
-#sidebar{width:200px;background:#06080f;border-right:1px solid #0d1020;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
-#main{flex:1;overflow:auto;display:flex;flex-direction:column;min-width:0}
+#sidebar{width:200px;background:#06080f;border-right:1px solid #0d1020;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+#main{flex:1;overflow:auto;display:flex;flex-direction:column}
+#header{position:sticky;top:0;background:rgba(6,8,15,.92);backdrop-filter:blur(14px);border-bottom:1px solid #0d1020;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;z-index:50}
+#content{flex:1;padding:22px}
+
+/* SIDEBAR */
+.logo{padding:15px;border-bottom:1px solid #0d1020;display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;animation:float 4s ease-in-out infinite}
+.logo-text{font-weight:900;font-size:17px}
+.logo-text span{background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+nav{padding:10px 7px;flex:1}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;cursor:pointer;margin-bottom:3px;font-size:14px;font-weight:500;color:#475569;border:1px solid transparent}
+.nav-item:hover{color:#a78bfa;background:rgba(124,58,237,.08)}
 .nav-item.active{color:#a78bfa;background:rgba(124,58,237,.14);border-color:rgba(124,58,237,.28)}
-.estilo-item{padding:11px 12px;border-radius:11px;cursor:pointer;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:9px;margin-bottom:8px}
-.estilo-item.sel{background:rgba(124,58,237,.12);border-color:rgba(124,58,237,.5)}
-.voz-item{padding:8px 10px;border-radius:9px;cursor:pointer;margin-bottom:5px;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:8px}
-.voz-item.sel{background:rgba(79,70,229,.14);border-color:rgba(99,102,241,.5)}
-.fmt-item{padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:8px;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:10px}
-.fmt-item.sel{background:rgba(6,182,212,.09);border-color:rgba(6,182,212,.4)}
+.user-area{padding:10px;border-top:1px solid #0d1020}
+.plan-box{background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.22);border-radius:11px;padding:10px 12px;margin-bottom:8px}
+.progress{height:3px;background:#0d1020;border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-bar{height:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee)}
+
+/* AUTH */
+#auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#04050a}
+.auth-box{width:100%;max-width:400px}
+.auth-card{background:#080c1a;border:1.5px solid #131830;border-radius:18px;padding:28px}
+.tab-bar{display:flex;background:#0d1020;border-radius:10px;padding:4px;margin-bottom:22px;gap:4px}
+.tab{flex:1;padding:9px;border-radius:8px;background:transparent;color:#475569;font-size:14px;font-weight:600}
+.tab.active{background:#131830;color:#f1f5f9}
+
+/* PIPELINE */
+#pipeline-modal{position:fixed;inset:0;background:rgba(4,5,10,.96);backdrop-filter:blur(20px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+#pipeline-modal.open{display:flex}
+.pipeline-box{background:#080c1a;border:1.5px solid rgba(124,58,237,.45);border-radius:22px;width:100%;max-width:460px;padding:28px}
+.pipeline-step{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:11px;background:transparent;border:1px solid #131830;margin-bottom:6px}
+.pipeline-step.done{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2)}
+.pipeline-step.active{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.4)}
+.step-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:#0d1020;flex-shrink:0}
+.step-icon.done{background:rgba(16,185,129,.18);color:#10b981}
+.step-icon.active{background:rgba(124,58,237,.18)}
+
+/* VIDEO GRID */
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .video-card{background:#080c1a;border:1.5px solid #131830;border-radius:14px;overflow:hidden}
-.pip-step{display:flex;align-items:center;gap:10px;padding:9px 13px;border-radius:11px;background:transparent;border:1px solid #131830;margin-bottom:6px}
-.pip-step.done{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2)}
-.pip-step.active{background:rgba(124,58,237,.1);border-color:rgba(124,58,237,.4)}
-.chat-msg{max-width:82%;padding:11px 15px;font-size:14px;line-height:1.6;margin-bottom:4px}
-.chat-u{background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:16px 16px 4px 16px;align-self:flex-end}
-.chat-a{background:#0d1020;border:1.5px solid #131830;color:#cbd5e1;border-radius:16px 16px 16px 4px;align-self:flex-start}
+.video-thumb{height:130px;background:linear-gradient(135deg,#0d1020,#131830);display:flex;align-items:center;justify-content:center;font-size:44px;cursor:pointer;position:relative}
+.video-info{padding:12px 14px}
+
+/* ESTILO GRID */
+.estilo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.estilo-item{padding:11px 12px;border-radius:11px;cursor:pointer;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:9px}
+.estilo-item.selected{background:rgba(124,58,237,.12);border-color:rgba(124,58,237,.5)}
+
+/* VOZ E FORMATO */
+.voz-item{padding:8px 10px;border-radius:9px;cursor:pointer;margin-bottom:5px;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:8px}
+.voz-item.selected{background:rgba(79,70,229,.14);border-color:rgba(99,102,241,.5)}
+.format-item{padding:10px 12px;border-radius:10px;cursor:pointer;margin-bottom:8px;background:#0d1020;border:1.5px solid #131830;display:flex;align-items:center;gap:10px}
+.format-item.selected{background:rgba(6,182,212,.09);border-color:rgba(6,182,212,.4)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:#080c1a;border:1.5px solid #131830;border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.stat-bar{position:absolute;top:0;left:0;right:0;height:2px}
+
+/* ARIA */
+.chat-area{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+.chat-msg{max-width:82%;padding:11px 15px;font-size:14px;line-height:1.6}
+.chat-msg.user{background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:16px 16px 4px 16px;align-self:flex-end}
+.chat-msg.aria{background:#0d1020;border:1.5px solid #131830;color:#cbd5e1;border-radius:16px 16px 16px 4px;align-self:flex-start}
 </style>
 </head>
 <body>
 
 <!-- AUTH -->
-<div id="auth" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#04050a">
-  <div style="width:100%;max-width:400px">
+<div id="auth-screen">
+  <div class="auth-box">
     <div style="text-align:center;margin-bottom:28px">
       <div style="display:inline-flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;animation:float 4s ease-in-out infinite">▶</div>
+        <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">▶</div>
         <div style="font-weight:900;font-size:20px">Auto<span style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">vion</span></div>
       </div>
       <div style="margin-top:10px;color:#475569;font-size:14px">Crie vídeos virais com inteligência artificial</div>
     </div>
-    <div style="background:#080c1a;border:1.5px solid #131830;border-radius:18px;padding:28px">
-      <div style="display:flex;background:#0d1020;border-radius:10px;padding:4px;margin-bottom:22px;gap:4px">
-        <button id="tab-login" onclick="setTab('login')" style="flex:1;padding:9px;border-radius:8px;background:#131830;color:#f1f5f9;font-size:14px;font-weight:600">Entrar</button>
-        <button id="tab-reg" onclick="setTab('register')" style="flex:1;padding:9px;border-radius:8px;background:transparent;color:#475569;font-size:14px;font-weight:600">Criar conta</button>
+    <div class="auth-card">
+      <div class="tab-bar">
+        <button class="tab active" onclick="setTab('login')">Entrar</button>
+        <button class="tab" onclick="setTab('register')">Criar conta</button>
       </div>
-      <div id="nome-field" style="display:none;margin-bottom:12px"><input id="auth-nome" placeholder="Seu nome completo"/></div>
-      <div style="margin-bottom:12px"><input type="email" id="auth-email" placeholder="voce@email.com"/></div>
-      <div style="margin-bottom:12px"><input type="password" id="auth-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-      <div id="auth-msg" style="display:none;border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:12px"></div>
-      <button id="auth-btn" onclick="doLogin()" style="background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:12px;padding:13px;font-size:15px;font-weight:700;width:100%;display:flex;align-items:center;justify-content:center;gap:8px">Entrar na plataforma</button>
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #131830;text-align:center;font-size:12px;color:#334155">Mais de <span style="color:#8b5cf6;font-weight:700">12.400 criadores</span> já usam o Autovion</div>
+      <div id="register-field" style="display:none;margin-bottom:12px">
+        <input id="auth-nome" placeholder="Seu nome completo"/>
+      </div>
+      <div style="margin-bottom:12px">
+        <input type="email" id="auth-email" placeholder="voce@email.com"/>
+      </div>
+      <div style="margin-bottom:12px">
+        <input type="password" id="auth-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div id="auth-msg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:9px;font-size:13px"></div>
+      <button class="btn-primary" onclick="doLogin()" id="auth-btn">Entrar na plataforma</button>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #131830;text-align:center;font-size:12px;color:#334155">
+        Mais de <span style="color:#8b5cf6;font-weight:700">12.400 criadores</span> já usam o Autovion
+      </div>
     </div>
   </div>
 </div>
 
-<!-- PIPELINE -->
-<div id="pip-modal" style="position:fixed;inset:0;background:rgba(4,5,10,.96);backdrop-filter:blur(20px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#080c1a;border:1.5px solid rgba(124,58,237,.45);border-radius:22px;width:100%;max-width:460px;padding:28px">
+<!-- PIPELINE MODAL -->
+<div id="pipeline-modal">
+  <div class="pipeline-box">
     <div style="text-align:center;margin-bottom:22px">
       <div id="pip-icon" style="width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,#7c3aed,#4338ca);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 14px">⚙️</div>
       <div id="pip-title" style="font-weight:900;font-size:20px;margin-bottom:4px">Gerando seu vídeo...</div>
       <div id="pip-sub" style="color:#475569;font-size:13px">Etapa 1 de 6</div>
     </div>
     <div style="margin-bottom:18px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px"><span style="color:#475569">Progresso</span><span id="pip-pct" style="color:#8b5cf6;font-weight:700">0%</span></div>
-      <div style="height:5px;background:#131830;border-radius:5px;overflow:hidden"><div id="pip-bar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee);border-radius:5px;width:0%;transition:width .6s ease"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px">
+        <span style="color:#475569">Progresso</span>
+        <span id="pip-pct" style="color:#8b5cf6;font-weight:700">0%</span>
+      </div>
+      <div style="height:5px;background:#131830;border-radius:5px;overflow:hidden">
+        <div id="pip-bar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee);border-radius:5px;width:0%;transition:width .6s ease"></div>
+      </div>
     </div>
     <div id="pip-steps"></div>
-    <button id="pip-ok" onclick="closePip()" style="display:none;width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:12px;font-size:15px;font-weight:700;margin-top:10px">🎬 Ver Vídeo →</button>
-    <button id="pip-err" onclick="closePip()" style="display:none;width:100%;padding:13px;background:#0d1020;border:1.5px solid #131830;color:#f1f5f9;border-radius:12px;font-size:15px;font-weight:600;margin-top:10px">← Tentar novamente</button>
+    <button id="pip-btn" onclick="closePipeline()" style="display:none;width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:12px;font-size:15px;font-weight:700;margin-top:10px">🎬 Ver Vídeo Gerado →</button>
+    <button id="pip-retry" onclick="closePipelineRetry()" style="display:none;width:100%;padding:13px;background:#0d1020;border:1.5px solid #131830;color:#f1f5f9;border-radius:12px;font-size:15px;font-weight:600;margin-top:10px">← Tentar novamente</button>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app" style="display:none">
   <div id="sidebar">
-    <div style="padding:15px;border-bottom:1px solid #0d1020;display:flex;align-items:center;gap:10px">
-      <div style="width:32px;height:32px;background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">▶</div>
-      <div style="font-weight:900;font-size:17px">Auto<span style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">vion</span></div>
+    <div class="logo">
+      <div class="logo-icon">▶</div>
+      <div class="logo-text">Auto<span>vion</span></div>
     </div>
-    <nav style="padding:10px 7px;flex:1">
-      <div class="nav-item active" id="nav-dash" onclick="go('dash')">▣ Dashboard</div>
-      <div class="nav-item" id="nav-criar" onclick="go('criar')">⚡ Criar Vídeo</div>
-      <div class="nav-item" id="nav-aria" onclick="go('aria')">🤖 ARIA <span style="background:rgba(34,211,238,.18);color:#22d3ee;border-radius:99px;font-size:9px;padding:1px 6px;font-weight:800;margin-left:4px">AI</span></div>
+    <nav>
+      <div class="nav-item active" onclick="showPage('dash')" id="nav-dash">▣ Dashboard</div>
+      <div class="nav-item" onclick="showPage('criar')" id="nav-criar">⚡ Criar Vídeo</div>
+      <div class="nav-item" onclick="showPage('aria')" id="nav-aria">🤖 ARIA <span style="background:rgba(34,211,238,.18);color:#22d3ee;border-radius:99px;font-size:9px;padding:1px 6px;font-weight:800;margin-left:4px">AI</span></div>
     </nav>
-    <div style="padding:10px;border-top:1px solid #0d1020">
-      <div style="background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.22);border-radius:11px;padding:10px 12px;margin-bottom:8px">
+    <div class="user-area">
+      <div class="plan-box">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span id="plan-lbl" style="font-size:11px;color:#8b5cf6;font-weight:700">FREE</span>
-          <button onclick="go('planos')" style="background:#7c3aed;border-radius:6px;padding:2px 8px;font-size:10px;color:white;font-weight:700">⬆</button>
+          <span id="plan-label" style="font-size:11px;color:#8b5cf6;font-weight:700">FREE</span>
+          <button onclick="showPage('planos')" style="background:#7c3aed;border-radius:6px;padding:2px 8px;font-size:10px;color:white;font-weight:700">⬆</button>
         </div>
-        <div style="height:3px;background:#0d1020;border-radius:3px;overflow:hidden"><div id="cred-bar" style="height:100%;background:linear-gradient(90deg,#7c3aed,#22d3ee);width:0%"></div></div>
-        <div id="cred-lbl" style="font-size:10px;color:#334155;margin-top:4px">3/3 créditos</div>
+        <div class="progress"><div id="credits-bar" class="progress-bar" style="width:0%"></div></div>
+        <div id="credits-label" style="font-size:10px;color:#334155;margin-top:4px">3/3 créditos</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <div id="u-av" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#4338ca);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">G</div>
+        <div id="user-avatar" style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#4338ca);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">G</div>
         <div style="flex:1;min-width:0">
-          <div id="u-name" style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-          <div id="u-email" style="font-size:10px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          <div id="user-name" style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Guilherme</div>
+          <div id="user-email" style="font-size:10px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">email@gmail.com</div>
         </div>
-        <button onclick="logout()" style="background:none;color:#475569;font-size:12px">↩</button>
+        <button onclick="logout()" style="background:none;color:#475569;font-size:12px" title="Sair">↩</button>
       </div>
     </div>
   </div>
 
   <div id="main">
-    <div style="position:sticky;top:0;background:rgba(6,8,15,.92);backdrop-filter:blur(14px);border-bottom:1px solid #0d1020;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;z-index:50">
-      <div id="pg-title" style="font-weight:600;font-size:14px;color:#475569">Dashboard</div>
+    <div id="header">
+      <div id="page-title" style="font-weight:600;font-size:14px;color:#475569">Dashboard</div>
       <div style="display:flex;gap:9px">
-        <button onclick="go('criar')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:9px;padding:7px 15px;font-size:13px">+ Novo Vídeo</button>
-        <button onclick="go('planos')" style="background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:9px;padding:7px 15px;font-size:13px;font-weight:700">⚡ Pro</button>
+        <button class="btn-secondary" onclick="showPage('criar')">+ Novo Vídeo</button>
+        <button onclick="showPage('planos')" style="background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:9px;padding:7px 15px;font-size:13px;font-weight:700">⚡ Pro</button>
       </div>
     </div>
-    <div style="padding:22px">
+    <div id="content">
 
-      <!-- DASH -->
-      <div id="pg-dash">
-        <div style="margin-bottom:24px"><div style="font-weight:900;font-size:22px">Olá, <span id="dash-nm" style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></span> 👋</div><div style="color:#475569;font-size:13px;margin-top:3px">Seu estúdio de conteúdo com IA</div></div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
-          <div style="background:#080c1a;border:1.5px solid #131830;border-radius:12px;padding:16px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#8b5cf699,transparent)"></div><div style="font-size:20px;margin-bottom:8px">🎬</div><div id="s-total" style="font-weight:900;font-size:24px;color:#8b5cf6">0</div><div style="font-size:11px;color:#334155;margin-top:2px">Vídeos</div></div>
-          <div style="background:#080c1a;border:1.5px solid #131830;border-radius:12px;padding:16px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#10b98199,transparent)"></div><div style="font-size:20px;margin-bottom:8px">✅</div><div id="s-pron" style="font-weight:900;font-size:24px;color:#10b981">0</div><div style="font-size:11px;color:#334155;margin-top:2px">Prontos</div></div>
-          <div style="background:#080c1a;border:1.5px solid #131830;border-radius:12px;padding:16px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#22d3ee99,transparent)"></div><div style="font-size:20px;margin-bottom:8px">⏱️</div><div id="s-dur" style="font-weight:900;font-size:24px;color:#22d3ee">0:00</div><div style="font-size:11px;color:#334155;margin-top:2px">Duração</div></div>
+      <!-- DASHBOARD -->
+      <div id="page-dash">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+          <div>
+            <div style="font-weight:900;font-size:22px">Olá, <span id="dash-name" style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Guilherme</span> 👋</div>
+            <div style="color:#475569;font-size:13px;margin-top:3px">Seu estúdio de conteúdo com IA</div>
+          </div>
         </div>
-        <div id="vgrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#8b5cf699,transparent)"></div><div style="font-size:20px;margin-bottom:8px">🎬</div><div id="stat-total" style="font-weight:900;font-size:24px;color:#8b5cf6">0</div><div style="font-size:11px;color:#334155;margin-top:2px">Vídeos</div></div>
+          <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#10b98199,transparent)"></div><div style="font-size:20px;margin-bottom:8px">✅</div><div id="stat-prontos" style="font-weight:900;font-size:24px;color:#10b981">0</div><div style="font-size:11px;color:#334155;margin-top:2px">Prontos</div></div>
+          <div class="stat-card"><div class="stat-bar" style="background:linear-gradient(90deg,#22d3ee99,transparent)"></div><div style="font-size:20px;margin-bottom:8px">⏱️</div><div id="stat-dur" style="font-weight:900;font-size:24px;color:#22d3ee">0:00</div><div style="font-size:11px;color:#334155;margin-top:2px">Duração</div></div>
+        </div>
+        <div id="video-grid" class="video-grid">
+          <div style="text-align:center;padding:50px 20px;background:#080c1a;border:1.5px dashed #131830;border-radius:14px;grid-column:1/-1">
+            <div style="font-size:48px;margin-bottom:12px">🎬</div>
+            <div style="font-weight:800;font-size:18px;margin-bottom:6px">Nenhum vídeo ainda</div>
+            <div style="color:#475569;font-size:13px">Vá em "Criar Vídeo" para gerar seu primeiro projeto</div>
+          </div>
+        </div>
       </div>
 
       <!-- CRIAR -->
-      <div id="pg-criar" style="display:none;max-width:640px;margin:0 auto">
-        <div style="margin-bottom:24px"><div style="font-weight:900;font-size:24px;margin-bottom:4px">Criar Vídeo <span style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">com IA</span></div><div style="color:#475569;font-size:14px">Do tema ao vídeo em 1 clique. Pipeline 100% automatizado.</div></div>
-        <div class="card"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:8px">TEMA DO VÍDEO *</span><input id="tema" placeholder="Ex: A verdade sombria sobre dormir menos de 6 horas..." onkeydown="if(event.key==='Enter')gerar()"/><div id="tema-err" style="color:#ef4444;font-size:12px;margin-top:6px;display:none"></div><div style="font-size:11px;color:#334155;margin-top:5px">💡 Temas específicos e provocativos geram mais retenção</div></div>
-        <div class="card"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:12px">ESTILO NARRATIVO</span>
-          <div class="estilo-item sel" onclick="selE(this,'viral')"><span style="font-size:17px">⚡</span><div><div style="font-size:12px;font-weight:700;color:#a78bfa">Viral / Hype</div><div style="font-size:10px;color:#334155">Gancho agressivo</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'dark')"><span style="font-size:17px">🌑</span><div><div style="font-size:12px;font-weight:700">Dark & Misterioso</div><div style="font-size:10px;color:#334155">Sombrio, intrigante</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'motivacional')"><span style="font-size:17px">🔥</span><div><div style="font-size:12px;font-weight:700">Motivacional</div><div style="font-size:10px;color:#334155">Alta energia</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'curiosidades')"><span style="font-size:17px">🧠</span><div><div style="font-size:12px;font-weight:700">Curiosidades</div><div style="font-size:10px;color:#334155">Fatos surpreendentes</div></div></div>
-          <div class="estilo-item" onclick="selE(this,'relaxante')"><span style="font-size:17px">🌊</span><div><div style="font-size:12px;font-weight:700">Relaxante</div><div style="font-size:10px;color:#334155">Tom calmo</div></div></div>
+      <div id="page-criar" style="display:none;max-width:640px;margin:0 auto">
+        <div style="margin-bottom:24px">
+          <div style="font-weight:900;font-size:24px;margin-bottom:4px">Criar Vídeo <span style="background:linear-gradient(135deg,#a78bfa,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent">com IA</span></div>
+          <div style="color:#475569;font-size:14px">Do tema ao vídeo em 1 clique. Pipeline 100% automatizado.</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-          <div class="card" style="margin-bottom:0"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:10px">VOZ</span>
-            <div class="voz-item sel" onclick="selV(this,'echo')">🎙️ <div><div style="font-size:12px;font-weight:600;color:#818cf8">Echo</div><div style="font-size:10px;color:#334155">Masculino</div></div></div>
-            <div class="voz-item" onclick="selV(this,'onyx')">🔊 <div><div style="font-size:12px;font-weight:600">Onyx</div><div style="font-size:10px;color:#334155">Dramático</div></div></div>
-            <div class="voz-item" onclick="selV(this,'nova')">✨ <div><div style="font-size:12px;font-weight:600">Nova</div><div style="font-size:10px;color:#334155">Feminino</div></div></div>
-            <div class="voz-item" onclick="selV(this,'shimmer')">🌟 <div><div style="font-size:12px;font-weight:600">Shimmer</div><div style="font-size:10px;color:#334155">Suave</div></div></div>
-          </div>
-          <div class="card" style="margin-bottom:0"><span style="font-size:11px;color:#475569;font-weight:700;letter-spacing:.08em;display:block;margin-bottom:10px">FORMATO</span>
-            <div class="fmt-item sel" onclick="selF(this,'youtube')"><span style="font-size:18px">▶️</span><div><div style="font-size:13px;font-weight:600;color:#22d3ee">YouTube</div><div style="font-size:11px;color:#334155">16:9</div></div></div>
-            <div class="fmt-item" onclick="selF(this,'shorts')"><span style="font-size:18px">📱</span><div><div style="font-size:13px;font-weight:600">Shorts/TikTok</div><div style="font-size:11px;color:#334155">9:16</div></div></div>
+        <div class="card">
+          <span class="label">TEMA DO VÍDEO *</span>
+          <input id="tema-input" placeholder="Ex: A verdade sombria sobre dormir menos de 6 horas..." onkeydown="if(event.key==='Enter')gerarVideo()"/>
+          <div id="tema-error" class="error" style="display:none"></div>
+          <div style="font-size:11px;color:#334155;margin-top:5px">💡 Temas específicos e provocativos geram mais retenção</div>
+        </div>
+        <div class="card">
+          <span class="label">ESTILO NARRATIVO</span>
+          <div class="estilo-grid" id="estilo-grid">
+            <div class="estilo-item selected" onclick="selectEstilo(this,'viral')"><span style="font-size:17px">⚡</span><div><div style="font-size:12px;font-weight:700">Viral / Hype</div><div style="font-size:10px;color:#334155">Gancho agressivo</div></div></div>
+            <div class="estilo-item" onclick="selectEstilo(this,'dark')"><span style="font-size:17px">🌑</span><div><div style="font-size:12px;font-weight:700">Dark & Misterioso</div><div style="font-size:10px;color:#334155">Sombrio, intrigante</div></div></div>
+            <div class="estilo-item" onclick="selectEstilo(this,'motivacional')"><span style="font-size:17px">🔥</span><div><div style="font-size:12px;font-weight:700">Motivacional</div><div style="font-size:10px;color:#334155">Alta energia</div></div></div>
+            <div class="estilo-item" onclick="selectEstilo(this,'curiosidades')"><span style="font-size:17px">🧠</span><div><div style="font-size:12px;font-weight:700">Curiosidades</div><div style="font-size:10px;color:#334155">Fatos surpreendentes</div></div></div>
+            <div class="estilo-item" onclick="selectEstilo(this,'relaxante')"><span style="font-size:17px">🌊</span><div><div style="font-size:12px;font-weight:700">Relaxante</div><div style="font-size:10px;color:#334155">Tom calmo</div></div></div>
           </div>
         </div>
-        <button id="gerar-btn" onclick="gerar()" style="background:linear-gradient(135deg,#7c3aed,#4338ca);color:white;border-radius:13px;padding:15px;font-size:16px;font-weight:800;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 32px rgba(124,58,237,.45)">⚡ Gerar Vídeo Automático</button>
+        <div class="two-col">
+          <div class="card" style="margin-bottom:0">
+            <span class="label">VOZ</span>
+            <div class="voz-item selected" onclick="selectVoz(this,'echo')">🎙️ <div><div style="font-size:12px;font-weight:600">Echo</div><div style="font-size:10px;color:#334155">Masculino</div></div></div>
+            <div class="voz-item" onclick="selectVoz(this,'onyx')">🔊 <div><div style="font-size:12px;font-weight:600">Onyx</div><div style="font-size:10px;color:#334155">Dramático</div></div></div>
+            <div class="voz-item" onclick="selectVoz(this,'nova')">✨ <div><div style="font-size:12px;font-weight:600">Nova</div><div style="font-size:10px;color:#334155">Feminino</div></div></div>
+            <div class="voz-item" onclick="selectVoz(this,'shimmer')">🌟 <div><div style="font-size:12px;font-weight:600">Shimmer</div><div style="font-size:10px;color:#334155">Suave</div></div></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <span class="label">FORMATO</span>
+            <div class="format-item selected" onclick="selectFmt(this,'youtube')"><span style="font-size:18px">▶️</span><div><div style="font-size:13px;font-weight:600">YouTube</div><div style="font-size:11px;color:#334155">16:9</div></div></div>
+            <div class="format-item" onclick="selectFmt(this,'shorts')"><span style="font-size:18px">📱</span><div><div style="font-size:13px;font-weight:600">Shorts/TikTok</div><div style="font-size:11px;color:#334155">9:16</div></div></div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="gerarVideo()" id="gerar-btn" style="margin-top:2px">⚡ Gerar Vídeo Automático</button>
       </div>
 
       <!-- ARIA -->
-      <div id="pg-aria" style="display:none">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
-          <div><div style="font-weight:800;font-size:17px">ARIA <span style="background:rgba(34,211,238,.18);color:#22d3ee;border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700">IA Adaptativa</span></div><div id="aria-ct" style="color:#475569;font-size:12px">0 vídeos analisados</div></div>
-        </div>
-        <div id="chat-box" style="background:#080c1a;border:1.5px solid #131830;border-radius:14px;padding:16px;height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-          <div style="text-align:center;padding:20px 0">
-            <div style="font-size:32px;margin-bottom:8px">🤖</div>
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px">Olá! Sou a ARIA.</div>
-            <div style="color:#475569;font-size:13px;line-height:1.6;margin-bottom:14px">Aprendo com seus vídeos e melhoro as sugestões.</div>
-            <div style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center">
-              <button onclick="si('Que tema criar hoje?')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:99px;padding:6px 12px;font-size:12px">Que tema criar hoje?</button>
-              <button onclick="si('Me dê um gancho viral')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:99px;padding:6px 12px;font-size:12px">Me dê um gancho viral</button>
-              <button onclick="si('Analise meus vídeos')" style="background:#0d1020;border:1.5px solid #131830;color:#94a3b8;border-radius:99px;padding:6px 12px;font-size:12px">Analise meus vídeos</button>
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;gap:9px">
-          <textarea id="aria-in" rows="2" placeholder="Pergunte à ARIA... (Enter envia)" style="flex:1;resize:none;line-height:1.5;border-radius:11px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendA()}"></textarea>
-          <button onclick="sendA()" style="padding:0 16px;backgroun
+      <div id="page-aria" style="display:none;height:calc(100vh - 120px);display:flex;flex-direction:column">
+        <div style="margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#22d3ee);display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
+            <div>
+              <div style="font-weight:800;font-size:17px">ARIA <span 
