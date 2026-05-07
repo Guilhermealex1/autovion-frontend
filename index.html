@@ -277,7 +277,7 @@ RETORNE APENAS JSON VÁLIDO SEM TEXTO ADICIONAL:
 
   return (
     <div style={{ maxWidth:640, margin:"0 auto" }}>
-      <PipelineModal open={step>=0&&load} step={step} erro={pErr} onDone={()=>{setLoad(false);setStep(-1);}} onRetry={()=>{setLoad(false);setStep(-1);setPErr("");}}/>
+      <PipelineModal open={step>=0&&(load||!!pErr)} step={step} erro={pErr} onDone={()=>{setLoad(false);setStep(-1);}} onRetry={()=>{setLoad(false);setStep(-1);setPErr("");}}/>
       <div style={{ marginBottom:24 }}>
         <div style={{ fontWeight:900, fontSize:24, letterSpacing:"-.02em", marginBottom:4 }}>
           Criar Vídeo <span style={{ background:"linear-gradient(135deg,#a78bfa,#22d3ee)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>com IA</span>
