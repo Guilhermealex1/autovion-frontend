@@ -75,6 +75,50 @@ async function callClaude(prompt, apiKey) {
   return data.content?.map(i => i.text || "").join("") || "";
 }
 
+// ─── STREAMING PARA ARIA ──────────────────────────────────────
+async function callClaudeStream(system, messages, apiKey, onChunk) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 2048,
+      stream: true,
+      system,
+      messages,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Erro ${res.status}`);
+  }
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let full = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    for (const line of dec.decode(value, { stream: true }).split("\n")) {
+      if (!line.startsWith("data: ")) continue;
+      const d = line.slice(6).trim();
+      if (d === "[DONE]") continue;
+      try {
+        const j = JSON.parse(d);
+        if (j.type === "content_block_delta" && j.delta?.type === "text_delta") {
+          full += j.delta.text;
+          onChunk(j.delta.text);
+        }
+      } catch {}
+    }
+  }
+  return full;
+}
+
 // ─── CONSTANTES ───────────────────────────────────────────────
 const ESTILOS = [
   { id:"viral",        emoji:"⚡", label:"Viral / Hype",        desc:"Gancho agressivo, ritmo acelerado" },
@@ -531,96 +575,228 @@ function VisualizadorVideo({ projeto, onFechar }) {
   );
 }
 
-// ─── ARIA CHAT ────────────────────────────────────────────────
+// ─── CHAT ITEM (sidebar) ─────────────────────────────────────
+function ChatItem({ chat, ativo, onClick, onFixar, onDeletar }) {
+  const [h, setH] = useState(false);
+  const ultima = chat.msgs[chat.msgs.length - 1];
+  return (
+    <div onClick={onClick} onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)}
+      style={{ padding:"8px 9px", borderRadius:9, cursor:"pointer", background:ativo?"rgba(139,92,246,.15)":h?"rgba(255,255,255,.03)":"transparent", border:`1px solid ${ativo?"rgba(139,92,246,.3)":"transparent"}`, marginBottom:2, transition:"all .12s" }}>
+      <div style={{ display:"flex", alignItems:"flex-start", gap:4 }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:12, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:ativo?"#a78bfa":"#cbd5e1" }}>
+            {chat.fixado?"📌 ":""}{chat.titulo||"Nova Conversa"}
+          </div>
+          {ultima && <div style={{ fontSize:11, color:"#475569", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginTop:2 }}>{ultima.content.slice(0,45)}</div>}
+        </div>
+        {h && (
+          <div style={{ display:"flex", gap:2, flexShrink:0 }} onClick={e=>e.stopPropagation()}>
+            <button onClick={onFixar} style={{ background:"none", border:"none", color:chat.fixado?"#f59e0b":"#475569", fontSize:12, padding:"1px 4px", borderRadius:4, cursor:"pointer" }}>📌</button>
+            <button onClick={onDeletar} style={{ background:"none", border:"none", color:"#f43f5e", fontSize:12, padding:"1px 4px", borderRadius:4, cursor:"pointer" }}>✕</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── ARIA PANEL v2 ────────────────────────────────────────────
 function ARIAPanel({ projetos, apiKeys }) {
-  const [msgs, setMsgs]   = useLS("aria_msgs", []);
-  const [input, setInput] = useState("");
-  const [loading, setLoad] = useState(false);
+  const [chats, setChats]       = useLS("aria_chats_v2", []);
+  const [chatId, setChatId]     = useState(null);
+  const [input, setInput]       = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const [streamTxt, setStreamTxt] = useState("");
+  const [sb, setSb]             = useState(true);
+  const [busca, setBusca]       = useState("");
   const fimRef = useRef(null);
+  const taRef  = useRef(null);
 
-  useEffect(() => { fimRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs]);
+  const chatAtual = chats.find(c => c.id === chatId) || null;
+  const msgs = chatAtual?.msgs || [];
 
-  async function enviar() {
-    if (!input.trim() || loading) return;
-    if (!apiKeys.anthropic) return alert("Configure sua API Key da Anthropic nas Configurações!");
-    const msg = { id:uid(), role:"user", content:input };
-    setMsgs(m => [...m, msg]);
-    setInput(""); setLoad(true);
+  useEffect(() => { fimRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs.length, streamTxt]);
 
-    const memoria = `Usuário tem ${projetos.length} vídeos. Estilos: ${projetos.map(p=>p.estilo).join(", ")||"nenhum"}. Temas: ${projetos.map(p=>p.tema).slice(0,3).join(", ")||"nenhum"}.`;
-    const historico = msgs.slice(-6).map(m => `${m.role==="user"?"Usuário":"ARIA"}: ${m.content}`).join("\n");
-
-    try {
-      const prompt = `Você é ARIA, IA assistente do Autovion que aprende com o histórico do usuário.
-MEMÓRIA: ${memoria}
-HISTÓRICO: ${historico||"Início da conversa."}
-MENSAGEM: "${input}"
-Responda como ARIA: útil, criativo, conciso. Máximo 150 palavras.`;
-      const reply = await callClaude(prompt, apiKeys.anthropic);
-      setMsgs(m => [...m, { id:uid(), role:"aria", content:reply }]);
-    } catch(e) {
-      setMsgs(m => [...m, { id:uid(), role:"aria", content:`Erro: ${e.message}` }]);
+  useEffect(() => {
+    if (taRef.current) {
+      taRef.current.style.height = "auto";
+      taRef.current.style.height = Math.min(taRef.current.scrollHeight, 140) + "px";
     }
-    setLoad(false);
+  }, [input]);
+
+  function novoChat() {
+    const c = { id:uid(), titulo:"Nova Conversa", msgs:[], criadoEm:new Date().toISOString(), fixado:false };
+    setChats(p => [c, ...p]);
+    setChatId(c.id);
   }
 
+  function upd(id, fn) { setChats(p => p.map(c => c.id===id ? fn(c) : c)); }
+
+  async function enviar() {
+    if (!input.trim() || streaming) return;
+    if (!apiKeys.anthropic) return alert("Configure sua API Key da Anthropic nas Configurações!");
+
+    const userInput = input.trim();
+    const msgUser = { id:uid(), role:"user", content:userInput, ts:Date.now() };
+    setInput("");
+
+    let cid = chatId;
+    if (!cid) {
+      const nc = { id:uid(), titulo:userInput.slice(0,45), msgs:[msgUser], criadoEm:new Date().toISOString(), fixado:false };
+      setChats(p => [nc, ...p]);
+      cid = nc.id;
+      setChatId(cid);
+    } else {
+      upd(cid, c => ({ ...c, msgs:[...c.msgs, msgUser], titulo:c.msgs.length===0?userInput.slice(0,45):c.titulo }));
+    }
+
+    setStreaming(true); setStreamTxt("");
+
+    const prevMsgs = (chats.find(c=>c.id===cid)?.msgs || [])
+      .filter(m => m.id !== msgUser.id)
+      .slice(-20)
+      .map(m => ({ role:m.role==="user"?"user":"assistant", content:m.content }));
+    const apiMsgs = [...prevMsgs, { role:"user", content:userInput }];
+
+    const ctx = projetos.length > 0
+      ? `\n\nCONTEXTO DO USUÁRIO:\n- Vídeos criados: ${projetos.length}\n- Estilos: ${[...new Set(projetos.map(p=>p.estilo))].join(", ")}\n- Temas recentes: ${projetos.slice(0,3).map(p=>p.tema).join(" | ")}`
+      : "";
+
+    const system = `Você é ARIA, a assistente IA avançada do Autovion — plataforma de criação de vídeos com IA.
+
+Personalidade: criativa, estratégica, direta. Especialista em marketing de conteúdo, SEO para vídeo, copywriting e tendências digitais. Linguagem natural e amigável. Respostas concisas (máximo 200 palavras) exceto quando solicitado detalhe.${ctx}`;
+
+    try {
+      let acc = "";
+      await callClaudeStream(system, apiMsgs, apiKeys.anthropic, chunk => {
+        acc += chunk;
+        setStreamTxt(t => t + chunk);
+      });
+      upd(cid, c => ({ ...c, msgs:[...c.msgs, { id:uid(), role:"aria", content:acc, ts:Date.now() }] }));
+    } catch(e) {
+      upd(cid, c => ({ ...c, msgs:[...c.msgs, { id:uid(), role:"aria", content:`❌ ${e.message}`, ts:Date.now(), erro:true }] }));
+    }
+    setStreaming(false); setStreamTxt("");
+  }
+
+  const filtrados = chats.filter(c =>
+    !busca || c.titulo.toLowerCase().includes(busca.toLowerCase()) ||
+    c.msgs.some(m => m.content.toLowerCase().includes(busca.toLowerCase()))
+  );
+  const fixados  = filtrados.filter(c => c.fixado);
+  const recentes = filtrados.filter(c => !c.fixado);
+
   return (
-    <div style={{ height:"calc(100vh - 120px)", display:"flex", flexDirection:"column" }}>
-      <div style={{ marginBottom:16 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
-          <div style={{ width:40, height:40, borderRadius:11, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:19, boxShadow:"0 0 20px rgba(124,58,237,.4)", animation:"glow 3s infinite" }}>🤖</div>
-          <div>
-            <div style={{ fontWeight:800, fontSize:17 }}>ARIA <Badge cor="#22d3ee">IA Adaptativa</Badge></div>
-            <div style={{ color:"#475569", fontSize:12 }}>{projetos.length} vídeos analisados · aprendendo com você</div>
-          </div>
+    <div style={{ height:"calc(100vh - 124px)", display:"flex", borderRadius:14, overflow:"hidden", border:"1px solid #1a1f38", background:"#080a12" }}>
+
+      {/* Sidebar */}
+      <div style={{ width:sb?234:0, flexShrink:0, background:"#06080f", borderRight:"1px solid #1a1f38", display:"flex", flexDirection:"column", transition:"width .22s", overflow:"hidden" }}>
+        <div style={{ padding:"10px 9px", borderBottom:"1px solid #1a1f38" }}>
+          <button onClick={novoChat} style={{ width:"100%", padding:"9px", background:"linear-gradient(135deg,#7c3aed,#4f46e5)", color:"white", borderRadius:9, fontSize:13, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", gap:6, marginBottom:7 }}>
+            ✏️ Nova Conversa
+          </button>
+          <input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="🔍  Buscar..." style={{ padding:"7px 10px", fontSize:12 }}/>
         </div>
-        <div style={{ background:"#111428", borderRadius:10, padding:"9px 14px", border:"1px solid #1a1f38", display:"flex", alignItems:"center", gap:8 }}>
-          <span style={{ fontSize:12 }}>🧠</span>
-          <div style={{ flex:1, height:3, background:"#1a1f38", borderRadius:3, overflow:"hidden" }}>
-            <div style={{ height:"100%", background:"linear-gradient(90deg,#7c3aed,#22d3ee)", width:`${Math.min(projetos.length*20,100)}%` }}/>
-          </div>
-          <span style={{ fontSize:11, color:"#475569" }}>{Math.min(projetos.length*20,100)}%</span>
+        <div style={{ flex:1, overflowY:"auto", padding:"5px 5px" }}>
+          {fixados.length>0 && <>
+            <div style={{ fontSize:10, color:"#334155", fontWeight:700, padding:"6px 6px 2px", letterSpacing:".07em" }}>FIXADAS</div>
+            {fixados.map(c => <ChatItem key={c.id} chat={c} ativo={c.id===chatId} onClick={()=>setChatId(c.id)} onFixar={()=>upd(c.id,x=>({...x,fixado:!x.fixado}))} onDeletar={()=>{setChats(p=>p.filter(x=>x.id!==c.id));if(chatId===c.id)setChatId(null);}}/>)}
+          </>}
+          {recentes.length>0 && <>
+            <div style={{ fontSize:10, color:"#334155", fontWeight:700, padding:"6px 6px 2px", letterSpacing:".07em" }}>RECENTES</div>
+            {recentes.map(c => <ChatItem key={c.id} chat={c} ativo={c.id===chatId} onClick={()=>setChatId(c.id)} onFixar={()=>upd(c.id,x=>({...x,fixado:!x.fixado}))} onDeletar={()=>{setChats(p=>p.filter(x=>x.id!==c.id));if(chatId===c.id)setChatId(null);}}/>)}
+          </>}
+          {filtrados.length===0 && <div style={{ textAlign:"center", padding:"28px 10px", color:"#334155", fontSize:12 }}>{busca?"Nenhum resultado":"Comece uma conversa"}</div>}
+        </div>
+        <div style={{ padding:"7px 10px", borderTop:"1px solid #1a1f38", textAlign:"center" }}>
+          <span style={{ fontSize:10, color:"#334155" }}>{chats.length} conversa{chats.length!==1?"s":""}</span>
         </div>
       </div>
 
-      <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column", gap:10, paddingRight:4 }}>
-        {msgs.length === 0 && (
-          <div style={{ textAlign:"center", padding:"40px 20px" }}>
-            <div style={{ fontSize:38, marginBottom:10 }}>🤖</div>
-            <div style={{ fontWeight:700, fontSize:15, marginBottom:6 }}>Olá! Sou a ARIA.</div>
-            <div style={{ color:"#64748b", fontSize:13, lineHeight:1.7, marginBottom:20 }}>Aprendo com cada vídeo que você cria.<br/>Quanto mais você usa, melhores ficam minhas sugestões.</div>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:7, justifyContent:"center" }}>
-              {["Que tema criar hoje?","Analise meus vídeos","Me dê um gancho viral","Quais estilos funcionam melhor?"].map(s => (
-                <button key={s} onClick={()=>setInput(s)} style={{ background:"#111428", border:"1px solid #1a1f38", color:"#94a3b8", borderRadius:99, padding:"7px 14px", fontSize:12, fontWeight:500 }}>{s}</button>
-              ))}
-            </div>
-          </div>
-        )}
-        {msgs.map(m => (
-          <div key={m.id} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start" }}>
-            {m.role==="aria" && <div style={{ width:24, height:24, borderRadius:7, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, marginRight:7, flexShrink:0, alignSelf:"flex-end" }}>🤖</div>}
-            <div style={{ maxWidth:"82%", padding:"11px 15px", borderRadius:m.role==="user"?"16px 16px 4px 16px":"16px 16px 16px 4px", background:m.role==="user"?"linear-gradient(135deg,#7c3aed,#4f46e5)":"#111428", border:m.role==="aria"?"1px solid #1a1f38":"none", color:m.role==="user"?"white":"#cbd5e1", fontSize:14, lineHeight:1.6 }}>
-              {m.content}
-            </div>
-          </div>
-        ))}
-        {loading && (
-          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-            <div style={{ width:24, height:24, borderRadius:7, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11 }}>🤖</div>
-            <div style={{ background:"#111428", border:"1px solid #1a1f38", borderRadius:"16px 16px 16px 4px", padding:"11px 15px", display:"flex", gap:8, alignItems:"center" }}>
-              <Spinner size={14} cor="#a78bfa"/>
-              <span style={{ color:"#64748b", fontSize:13, animation:"pulse 1.5s infinite" }}>Analisando...</span>
-            </div>
-          </div>
-        )}
-        <div ref={fimRef}/>
-      </div>
+      {/* Chat Area */}
+      <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
 
-      <div style={{ paddingTop:12, borderTop:"1px solid #1a1f38", display:"flex", gap:9 }}>
-        <textarea value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviar();}}} placeholder="Pergunte à ARIA... (Enter para enviar)" rows={2} style={{ flex:1, padding:"10px 13px", resize:"none", lineHeight:1.5, borderRadius:11 }}/>
-        <button onClick={enviar} disabled={loading||!input.trim()} style={{ padding:"0 16px", background:"linear-gradient(135deg,#7c3aed,#4f46e5)", color:"white", borderRadius:11, alignSelf:"stretch", fontSize:16 }}>
-          {loading ? <Spinner size={16} cor="white"/> : "→"}
-        </button>
+        {/* Header */}
+        <div style={{ padding:"10px 14px", borderBottom:"1px solid #1a1f38", display:"flex", alignItems:"center", gap:9, background:"#06080f", flexShrink:0 }}>
+          <button onClick={()=>setSb(v=>!v)} style={{ background:"#111428", border:"1px solid #1a1f38", borderRadius:7, width:27, height:27, color:"#475569", fontSize:12, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{sb?"◀":"▶"}</button>
+          <div style={{ width:32, height:32, borderRadius:9, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, animation:"glow 3s infinite", flexShrink:0 }}>🤖</div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontWeight:700, fontSize:14 }}>ARIA <Badge cor="#22d3ee">IA Adaptativa</Badge></div>
+            <div style={{ fontSize:11, color:"#475569" }}>{streaming?"digitando...":projetos.length>0?`${projetos.length} vídeo${projetos.length!==1?"s":""} analisados`:"pronta para ajudar"}</div>
+          </div>
+          {chatAtual && <button onClick={()=>upd(chatId,c=>({...c,fixado:!c.fixado}))} style={{ background:"none", border:"1px solid #1a1f38", borderRadius:7, padding:"4px 10px", fontSize:11, color:chatAtual.fixado?"#f59e0b":"#475569", cursor:"pointer" }}>{chatAtual.fixado?"📌 Fixada":"📌 Fixar"}</button>}
+          <button onClick={novoChat} style={{ background:"#111428", border:"1px solid #1a1f38", borderRadius:7, padding:"5px 12px", fontSize:12, color:"#94a3b8", fontWeight:600 }}>+ Nova</button>
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex:1, overflowY:"auto", padding:"16px 18px", display:"flex", flexDirection:"column", gap:14 }}>
+          {!chatAtual && (
+            <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"20px" }}>
+              <div style={{ fontSize:54, marginBottom:14, animation:"float 4s ease-in-out infinite" }}>🤖</div>
+              <div style={{ fontWeight:800, fontSize:20, marginBottom:8 }}>Olá! Sou a ARIA.</div>
+              <div style={{ color:"#64748b", fontSize:13, lineHeight:1.75, marginBottom:26, maxWidth:400 }}>
+                Sua assistente de IA para criação de conteúdo viral.<br/>Aprendo com seus projetos e fico mais inteligente a cada conversa.
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, width:"100%", maxWidth:440 }}>
+                {[
+                  ["⚡","Crie um gancho viral para meu próximo vídeo"],
+                  ["📊","Analise meu histórico e sugira temas"],
+                  ["🎯","Quais formatos de vídeo estão em alta?"],
+                  ["🧠","Estrutura de script para YouTube Shorts"],
+                ].map(([ic,txt]) => (
+                  <button key={txt} onClick={()=>setInput(txt)} style={{ background:"#0e1020", border:"1px solid #1a1f38", borderRadius:12, padding:"13px 14px", textAlign:"left", cursor:"pointer", transition:"border-color .15s, background .15s" }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor="#2d3560";e.currentTarget.style.background="#111428"}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor="#1a1f38";e.currentTarget.style.background="#0e1020"}}>
+                    <div style={{ fontSize:20, marginBottom:6 }}>{ic}</div>
+                    <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.5 }}>{txt}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {msgs.map(m => (
+            <div key={m.id} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", gap:8, alignItems:"flex-end" }}>
+              {m.role==="aria" && <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, flexShrink:0 }}>🤖</div>}
+              <div style={{ maxWidth:"76%", padding:"12px 16px", borderRadius:m.role==="user"?"18px 18px 4px 18px":"4px 18px 18px 18px", background:m.role==="user"?"linear-gradient(135deg,#7c3aed,#4f46e5)":m.erro?"rgba(244,63,94,.1)":"#111428", border:m.role==="aria"?`1px solid ${m.erro?"rgba(244,63,94,.3)":"#1a1f38"}`:"none", color:m.role==="user"?"white":m.erro?"#f43f5e":"#cbd5e1", fontSize:14, lineHeight:1.75, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>
+                {m.content}
+              </div>
+              {m.role==="user" && <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#6d28d9,#4338ca)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, flexShrink:0, color:"white" }}>U</div>}
+            </div>
+          ))}
+
+          {streaming && (
+            <div style={{ display:"flex", gap:8, alignItems:"flex-end" }}>
+              <div style={{ width:28, height:28, borderRadius:8, background:"linear-gradient(135deg,#7c3aed,#22d3ee)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, flexShrink:0 }}>🤖</div>
+              <div style={{ maxWidth:"76%", padding:"12px 16px", borderRadius:"4px 18px 18px 18px", background:"#111428", border:"1px solid #1a1f38", color:"#cbd5e1", fontSize:14, lineHeight:1.75, whiteSpace:"pre-wrap", wordBreak:"break-word" }}>
+                {streamTxt}<span style={{ display:"inline-block", width:2, height:15, background:"#a78bfa", marginLeft:2, verticalAlign:"middle", animation:"pulse .6s infinite" }}/>
+              </div>
+            </div>
+          )}
+
+          <div ref={fimRef}/>
+        </div>
+
+        {/* Input */}
+        <div style={{ padding:"12px 16px 14px", borderTop:"1px solid #1a1f38", background:"#06080f", flexShrink:0 }}>
+          <div style={{ display:"flex", gap:9, alignItems:"flex-end", background:"#111428", border:"1px solid #232848", borderRadius:14, padding:"9px 9px 9px 14px", transition:"border-color .2s" }}
+            onFocusCapture={e=>e.currentTarget.style.borderColor="#8b5cf6"}
+            onBlurCapture={e=>e.currentTarget.style.borderColor="#232848"}>
+            <textarea
+              ref={taRef}
+              value={input}
+              onChange={e=>setInput(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();enviar();}}}
+              placeholder="Pergunte à ARIA... (Enter para enviar, Shift+Enter para nova linha)"
+              rows={1}
+              style={{ flex:1, padding:"4px 0", resize:"none", lineHeight:1.6, background:"transparent", border:"none", borderRadius:0, fontSize:14, maxHeight:140, overflowY:"auto" }}
+            />
+            <button onClick={enviar} disabled={streaming||!input.trim()} style={{ padding:"9px 15px", background:streaming||!input.trim()?"#1a1f38":"linear-gradient(135deg,#7c3aed,#4f46e5)", color:streaming||!input.trim()?"#475569":"white", borderRadius:10, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, height:38, transition:"all .2s" }}>
+              {streaming?<Spinner size={16} cor="#475569"/>:"↑"}
+            </button>
+          </div>
+          <div style={{ textAlign:"center", marginTop:6, fontSize:10, color:"#1e2338" }}>ARIA · claude-sonnet-4-6 · Shift+Enter para nova linha</div>
+        </div>
       </div>
     </div>
   );
