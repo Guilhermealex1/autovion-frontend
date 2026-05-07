@@ -62,7 +62,7 @@ async function callClaude(prompt, apiKey) {
       "anthropic-dangerous-direct-browser-access": "true",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 3000,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -559,7 +559,7 @@ Responda como ARIA: útil, criativo, conciso. Máximo 150 palavras.`;
       const reply = await callClaude(prompt, apiKeys.anthropic);
       setMsgs(m => [...m, { id:uid(), role:"aria", content:reply }]);
     } catch(e) {
-      setMsgs(m => [...m, { id:uid(), role:"aria", content:"Erro ao processar. Verifique sua API key." }]);
+      setMsgs(m => [...m, { id:uid(), role:"aria", content:`Erro: ${e.message}` }]);
     }
     setLoad(false);
   }
